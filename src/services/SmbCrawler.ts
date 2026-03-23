@@ -1,9 +1,10 @@
-import SMB2 from 'smb2';
+const SMB2 = require('smb2');
 import { Video } from '../entities/Video';
 import { AppDataSource } from '../config/database';
 
 export interface SmbConfig {
   share: string;
+  path: string;
   domain: string;
   host: string;
   port: number;
@@ -28,13 +29,12 @@ export class SmbCrawler {
 
   constructor(config: SmbConfig) {
     this.config = config;
-    this.client = SMB2.createClient({
-      share: config.share,
+    this.client = new SMB2({
+      share: `\\\\${config.host}\\${config.share}`,
       domain: config.domain,
-      host: config.host,
-      port: config.port,
       username: config.username,
       password: config.password,
+      port: config.port,
     });
   }
 

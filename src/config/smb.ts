@@ -1,6 +1,5 @@
 import { SmbConfig } from '../services/SmbCrawler';
 
-export const defaultCrawlPath = '/';
 
 export function validateSmbConfig(config: SmbConfig): string[] {
   const errors: string[] = [];

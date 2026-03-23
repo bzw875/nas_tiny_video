@@ -13,6 +13,7 @@ router.post('/crawl', async (req: Request, res: Response) => {
 
     const config = {
       share: share || 'smb',
+      path: path || '/',
       domain: '',
       host: host || '192.168.1.17',
       port: 445,

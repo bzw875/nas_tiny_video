@@ -28,7 +28,9 @@ app.get('/', (req, res) => {
 });
 
 async function bootstrap() {
+  console.log('Starting application...');
   await initDatabase();
+  console.log('Database initialized');
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });

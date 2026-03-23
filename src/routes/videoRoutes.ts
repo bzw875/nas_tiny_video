@@ -2,19 +2,20 @@ import { Router } from 'express';
 import { AppDataSource } from '../config/database';
 import { Video } from '../entities/Video';
 import { SmbCrawler, SmbConfig } from '../services/SmbCrawler';
-import { defaultCrawlPath, validateSmbConfig } from '../config/smb';
+import { validateSmbConfig } from '../config/smb';
 
 const router = Router();
 const videoRepo = AppDataSource.getRepository(Video);
 
 // Default SMB config - should be moved to env/config
 const defaultSmbConfig: SmbConfig = {
-  share: '\\\u4fdd\u6e29\u672f\u5bf8\u91cf\u76d2',
+  share: 'smb',
+  path: '/Volumes/banzhaowu/FormatFactory/BaiduNetdisk/',
   domain: '',
   host: '192.168.1.17',
   port: 445,
-  username: '',
-  password: '',
+  username: 'fnnas',
+  password: 'shenJ!2017',
 };
 
 // List all videos with pagination
@@ -98,7 +99,7 @@ router.post('/crawl', async (req, res) => {
   try {
     const { path, config } = req.body;
     const smbConfig: SmbConfig = config || defaultSmbConfig;
-    const crawlPath = path || defaultCrawlPath;
+    const crawlPath = defaultSmbConfig.path;
 
     // Validate config
     const errors = validateSmbConfig(smbConfig);
