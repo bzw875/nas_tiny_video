@@ -1,25 +1,36 @@
-import { Router, Request, Response } from 'express';
+import { Router } from 'express';
 import { AppDataSource } from '../config/database';
 import { Video } from '../entities/Video';
-import { Tag } from '../entities/Tag';
+import { SmbCrawler, SmbConfig } from '../services/SmbCrawler';
+import { defaultCrawlPath, validateSmbConfig } from '../config/smb';
 
 const router = Router();
+const videoRepo = AppDataSource.getRepository(Video);
 
-// Get all videos with pagination
-router.get('/', async (req: Request, res: Response) => {
+// Default SMB config - should be moved to env/config
+const defaultSmbConfig: SmbConfig = {
+  share: '\\\u4fdd\u6e29\u672f\u5bf8\u91cf\u76d2',
+  domain: '',
+  host: '192.168.1.17',
+  port: 445,
+  username: '',
+  password: '',
+};
+
+// List all videos with pagination
+router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
-    const search = req.query.search as string;
+    const search = (req.query.search as string) || '';
 
-    const videoRepo = AppDataSource.getRepository(Video);
-    const queryBuilder = videoRepo.createQueryBuilder('video');
+    const query = videoRepo.createQueryBuilder('video');
 
     if (search) {
-      queryBuilder.where('video.filename LIKE :search', { search: `%${search}%` });
+      query.where('video.filename LIKE :search', { search: `%${search}%` });
     }
 
-    const [videos, total] = await queryBuilder
+    const [videos, total] = await query
       .orderBy('video.createdAt', 'DESC')
       .skip((page - 1) * limit)
       .take(limit)
@@ -31,39 +42,94 @@ router.get('/', async (req: Request, res: Response) => {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
       },
     });
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    console.error('Error fetching videos:', error);
+    res.status(500).json({ error: 'Failed to fetch videos' });
   }
 });
 
 // Get video by ID
-router.get('/:id', async (req: Request, res: Response) => {
+router.get('/:id', async (req, res) => {
   try {
-    const videoRepo = AppDataSource.getRepository(Video);
-    const video = await videoRepo.findOne({ where: { id: parseInt(req.params.id as string) } });
+    const video = await videoRepo.findOne({
+      where: { id: parseInt(req.params.id) },
+    });
 
     if (!video) {
       return res.status(404).json({ error: 'Video not found' });
     }
 
     res.json(video);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+  } catch (error) {
+    console.error('Error fetching video:', error);
+    res.status(500).json({ error: 'Failed to fetch video' });
   }
 });
 
-// Get tags for a video
-router.get('/:id/tags', async (req: Request, res: Response) => {
+// Stream video from SMB
+router.get('/:id/stream', async (req, res) => {
   try {
-    const tagRepo = AppDataSource.getRepository(Tag);
-    // TODO: Implement video-tag association query
-    const tags = await tagRepo.find();
-    res.json(tags);
-  } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    const video = await videoRepo.findOne({
+      where: { id: parseInt(req.params.id) },
+    });
+
+    if (!video) {
+      return res.status(404).json({ error: 'Video not found' });
+    }
+
+    // Return SMB URL for streaming
+    const smbUrl = `smb://${video.smbHost}${video.path}`;
+    res.json({
+      streamUrl: smbUrl,
+      filename: video.filename,
+      size: video.size,
+    });
+  } catch (error) {
+    console.error('Error streaming video:', error);
+    res.status(500).json({ error: 'Failed to stream video' });
+  }
+});
+
+// Trigger SMB crawl
+router.post('/crawl', async (req, res) => {
+  try {
+    const { path, config } = req.body;
+    const smbConfig: SmbConfig = config || defaultSmbConfig;
+    const crawlPath = path || defaultCrawlPath;
+
+    // Validate config
+    const errors = validateSmbConfig(smbConfig);
+    if (errors.length > 0) {
+      return res.status(400).json({ error: 'Invalid SMB config', details: errors });
+    }
+
+    const crawler = new SmbCrawler(smbConfig);
+    const videos: { filename: string; path: string; size: number; modifiedAt: Date }[] = [];
+
+    try {
+      console.log(`Starting crawl from: ${crawlPath}`);
+      await crawler.crawlDirectory(crawlPath, (video) => {
+        videos.push(video);
+        console.log(`Found video: ${video.filename}`);
+      });
+
+      const savedCount = await crawler.saveToDatabase(videos);
+
+      res.json({
+        message: 'Crawl completed',
+        found: videos.length,
+        saved: savedCount,
+        videos,
+      });
+    } finally {
+      crawler.close();
+    }
+  } catch (error) {
+    console.error('Error crawling SMB:', error);
+    res.status(500).json({ error: 'Failed to crawl SMB', details: String(error) });
   }
 });
 

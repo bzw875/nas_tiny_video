@@ -23,7 +23,7 @@ const VIDEO_EXTENSIONS = [
 ];
 
 export class SmbCrawler {
-  private client: SMB2;
+  private client: any;
   private config: SmbConfig;
 
   constructor(config: SmbConfig) {

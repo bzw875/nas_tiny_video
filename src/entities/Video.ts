@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Tag } from './Tag';
 
 @Entity('videos')
 export class Video {
@@ -22,4 +23,12 @@ export class Video {
 
   @CreateDateColumn()
   createdAt!: Date;
+
+  @ManyToMany(() => Tag, tag => tag.videos)
+  @JoinTable({
+    name: 'video_tags',
+    joinColumn: { name: 'videoId', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'tagId', referencedColumnName: 'id' },
+  })
+  tags!: Tag[];
 }

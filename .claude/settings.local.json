@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(yarn start:*)",
+      "Bash(yarn remove:*)",
+      "Bash(ls:*)",
+      "Bash(npm start:*)",
+      "Bash(pnpm add:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npm i:*)",
+      "Bash(npm run:*)",
+      "Bash(git checkout:*)",
+      "Bash(npx ts-node:*)",
+      "Bash(npm install:*)"
+    ]
+  }
+}
