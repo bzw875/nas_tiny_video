@@ -9,7 +9,7 @@ const videoRepo = AppDataSource.getRepository(Video);
 
 // Default SMB config - should be moved to env/config
 const defaultSmbConfig: SmbConfig = {
-  share: 'smb',
+  share: 'banzhaowu',
   path: '/Volumes/banzhaowu/FormatFactory/BaiduNetdisk/',
   domain: '',
   host: '192.168.1.17',

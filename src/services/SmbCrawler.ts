@@ -30,11 +30,11 @@ export class SmbCrawler {
   constructor(config: SmbConfig) {
     this.config = config;
     this.client = new SMB2({
-      share: `\\\\${config.host}\\${config.share}`,
+      host: config.host,
+      share: config.share,
       domain: config.domain,
       username: config.username,
       password: config.password,
-      port: config.port,
     });
   }
 
