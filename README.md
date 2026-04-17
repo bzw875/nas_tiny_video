@@ -1,126 +1,117 @@
-# SMB 视频管理系统
+# Video Manager（autoPushOld）
 
-一个用于爬取 NAS (SMB) 视频文件并提供 Web 管理界面的 Node.js 应用。
+本地视频目录扫描 → 写入 MySQL → 用 **NestJS API** 与 **React（Vite）** 前端做列表、按文件夹浏览和标签管理的一体化小工具。仓库为 npm workspaces 单体仓库。
 
-## 功能特性
+## 功能概览
 
-- 🕷️ **SMB 爬虫**: 递归遍历 SMB 共享目录，自动识别视频文件
-- 💾 **数据库存储**: 使用 SQLite + TypeORM 存储视频元数据
-- 🎬 **视频播放**: 支持 SMB 流式传输和 Web 播放
-- 🔍 **搜索功能**: 按文件名搜索视频
-- 🏷️ **标签管理**: 支持视频标签（待完善）
+- **扫描脚本**（`scan-videos.js`）：递归扫描指定目录，识别常见视频扩展名，生成 `videos.json`（含路径、大小、创建/修改时间、`video_key` 等）。
+- **导入脚本**（`import-videos.js`）：将 `videos.json` 批量写入 `videos` 表；`video_key` 唯一，重复键会跳过。
+- **API**（`packages/api`）：视频分页/筛选/排序、按路径前缀列文件夹、单条详情、更新视频关联标签；标签 CRUD。
+- **Web**（`packages/web`）：视频列表、文件夹视图、标签管理；开发时通过 Vite 将 `/api` 代理到本机 API。
 
-## 技术栈
+## 仓库结构
 
-- **后端**: Node.js + Express + TypeScript
-- **数据库**: SQLite + TypeORM + better-sqlite3
-- **SMB 客户端**: smb2
-- **前端**: React + Ant Design（待实现）
+| 路径 | 说明 |
+|------|------|
+| `scan-videos.js` | 扫描目录 → `videos.json` |
+| `import-videos.js` | `videos.json` → MySQL |
+| `db-schema.sql` | MySQL 建库建表（与 Prisma 模型一致） |
+| `packages/api` | NestJS + Prisma + MySQL |
+| `packages/web` | React 18 + Vite 6 |
 
-## 项目结构
+## 环境要求
 
-```
-src/
-├── config/
-│   └── database.ts       # 数据库配置
-├── entities/
-│   ├── Video.ts          # 视频实体
-│   ├── Tag.ts            # 标签实体
-│   └── VideoTag.ts       # 视频标签关联
-├── services/
-│   └── SmbCrawler.ts     # SMB 爬虫服务
-├── routes/
-│   ├── videoRoutes.ts    # 视频 API 路由
-│   ├── streamRoutes.ts   # 视频流传输
-│   └── crawlerRoutes.ts  # 爬虫控制路由
-└── app.ts                # 应用入口
-```
+- Node.js（建议当前 LTS）
+- MySQL 5.7+ / 8.x
 
-## 快速开始
+## 数据库
 
-### 安装依赖
+1. 执行 `db-schema.sql` 创建库 `video_manager` 及表 `videos`、`tags`、`video_tags`。
+2. 在 `packages/api/.env` 中配置 Prisma 使用的连接串，例如：
+
+   ```env
+   DATABASE_URL="mysql://USER:PASSWORD@127.0.0.1:3306/video_manager"
+   ```
+
+   `import-videos.js` 会尝试从该文件读取 `DATABASE_URL`；也可直接设置环境变量，或使用 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASSWORD`、`DB_NAME`。
+
+3. 安装依赖并生成 Prisma Client：
+
+   ```bash
+   npm install
+   npm run prisma:generate
+   ```
+
+## API 环境变量（`packages/api`）
+
+| 变量 | 说明 |
+|------|------|
+| `DATABASE_URL` | 必填，MySQL 连接 URL |
+| `PORT` | 监听端口，默认 `4000` |
+| `CORS_ORIGIN` | 可选，逗号分隔的允许来源；不设则开发模式下较宽松 |
+
+## 扫描与导入
+
+1. 编辑 `scan-videos.js` 中的 `targetDir`，改为你本机要扫描的根目录。
+2. 生成清单：
+
+   ```bash
+   npm run run
+   ```
+
+   输出：`videos.json`（项目根目录）。
+
+3. 导入数据库：
+
+   ```bash
+   npm run import
+   ```
+
+## 本地开发
+
+终端一 — API：
 
 ```bash
-pnpm install
+npm run dev:api
 ```
 
-### 配置环境变量
+默认 `http://localhost:4000`。
 
-复制 `.env.example` 为 `.env` 并配置：
+终端二 — Web（`/api` 代理到 `127.0.0.1:4000`）：
 
 ```bash
-cp .env.example .env
+npm run dev:web
 ```
 
-编辑 `.env` 文件：
+浏览器访问 Vite 提示的地址（默认 `http://localhost:5173`）。
 
-```env
-SMB_HOST=192.168.1.17
-SMB_SHARE=smb
-SMB_USERNAME=your_username
-SMB_PASSWORD=your_password
-PORT=3000
-```
+若前端直连其他地址的 API，可在 `packages/web` 设置 `VITE_API_BASE`（例如生产环境完整 API 根路径）。
 
-### 启动服务
+## 构建
 
-开发模式（热重载）：
 ```bash
-pnpm run dev
+npm run build:api
+npm run build:web
 ```
 
-生产模式：
-```bash
-pnpm run start
-```
+API 生产启动：`packages/api` 内 `npm run start:prod`（先 `build`）。
 
-服务启动后访问：http://localhost:3000
+## HTTP 接口摘要
 
-## API 接口
+前缀无全局 `/api`（由前端代理去掉 `/api` 前缀）。
 
-### 视频列表
-```
-GET /api/videos?page=1&limit=20&search=keyword
-```
+**Videos**
 
-### 视频详情
-```
-GET /api/videos/:id
-```
+- `GET /videos` — 查询参数：`skip`、`take`、`tagIds`（逗号分隔）、`pathPrefix`、`search`、`sortBy`、`sortOrder`、`extensions`（逗号分隔，如 `.mp4,.mkv`）
+- `GET /videos/folders?parent=` — 某路径下的子文件夹列表
+- `GET /videos/:id` — 单条（含标签）
+- `PATCH /videos/:id/tags` — body：`{ "tagIds": number[] }`
 
-### 视频流播放
-```
-GET /api/stream/video/:id
-```
+**Tags**
 
-### 触发爬虫
-```
-POST /api/crawler/crawl
-Content-Type: application/json
+- `GET /tags`、`GET /tags/:id`
+- `POST /tags`、`PATCH /tags/:id`、`DELETE /tags/:id`
 
-{
-  "host": "192.168.1.17",
-  "share": "smb",
-  "username": "guest",
-  "password": "",
-  "path": "/"
-}
-```
+## 许可
 
-### 健康检查
-```
-GET /health
-```
-
-## 支持的视频格式
-
-- mp4, mkv, avi, mov, wmv, flv, webm, m4v, mpeg, mpg, 3gp
-
-## 待实现功能
-
-- [ ] React 前端界面
-- [ ] 标签管理 UI
-- [ ] 增量爬取
-- [ ] 爬取进度显示
-- [ ] 多 SMB 源配置
-- [ ] 视频缩略图生成
+`ISC`（见根目录 `package.json`）。

@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Video {
+  id           Int       @id @default(autoincrement())
+  filename     String    @db.VarChar(500)
+  path         String    @db.VarChar(1000)
+  extension    String?   @db.VarChar(20)
+  size         BigInt?
+  createdTime  DateTime? @map("created_time")
+  modifiedTime DateTime? @map("modified_time")
+  videoKey     String?   @unique @map("video_key") @db.VarChar(100)
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  tags         VideoTag[]
+
+  @@index([filename], map: "idx_filename")
+  @@index([createdTime], map: "idx_created_time")
+  @@map("videos")
+}
+
+model Tag {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique @db.VarChar(100)
+  description String?    @db.Text
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  videos      VideoTag[]
+
+  @@map("tags")
+}
+
+model VideoTag {
+  id        Int      @id @default(autoincrement())
+  videoId   Int      @map("video_id")
+  tagId     Int      @map("tag_id")
+  createdAt DateTime @default(now()) @map("created_at")
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  tag       Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([videoId, tagId], map: "unique_video_tag")
+  @@index([videoId], map: "idx_video_id")
+  @@index([tagId], map: "idx_tag_id")
+  @@map("video_tags")
+}

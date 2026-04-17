@@ -1,34 +1,22 @@
 {
-  "name": "project-name",
-  "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "name": "autopushold",
+  "version": "1.0.0",
   "private": true,
-  "license": "UNLICENSED",
-  "scripts": {
-    "start": "ts-node src/app.ts",
-    "dev": "nodemon src/app.ts"
-  },
+  "description": "Video manager monorepo",
+  "license": "ISC",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0",
-    "@types/node": "^25.5.0",
-    "better-sqlite3": "^12.8.0",
-    "cors": "^2.8.6",
-    "express": "^5.2.1",
-    "nodemon": "^3.1.14",
-    "reflect-metadata": "^0.2.2",
-    "smb2": "^0.2.11",
-    "sqlite3": "^6.0.1",
-    "ssh2-sftp-client": "^12.0.1",
-    "ts-node": "^10.9.2",
-    "typeorm": "^0.3.28"
+    "mysql2": "^3.14.0"
   },
-  "main": "app.js",
-  "keywords": [],
-  "type": "commonjs",
-  "devDependencies": {
-    "@types/cors": "^2.8.19",
-    "@types/express": "^5.0.6",
-    "typescript": "^5.9.3"
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "run": "node scan-videos.js",
+    "import": "node import-videos.js",
+    "dev:api": "npm run start:dev -w @video-manager/api",
+    "dev:web": "npm run dev -w @video-manager/web",
+    "build:api": "npm run build -w @video-manager/api",
+    "build:web": "npm run build -w @video-manager/web",
+    "prisma:generate": "npm run prisma:generate -w @video-manager/api"
   }
 }
