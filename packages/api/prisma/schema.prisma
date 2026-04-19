@@ -49,3 +49,16 @@ model VideoTag {
   @@index([tagId], map: "idx_tag_id")
   @@map("video_tags")
 }
+
+/// 与现有 MySQL `novel` 表列名一致（camelCase）
+model Novel {
+  id         Int    @id @default(autoincrement())
+  name       String @unique @db.VarChar(500)
+  author     String @db.VarChar(500)
+  wordCount  Int
+  content    String @db.LongText
+  starRating Int
+  readCount  Int
+
+  @@map("novel")
+}

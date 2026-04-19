@@ -4,6 +4,9 @@ export function Layout() {
   return (
     <div className="app-shell">
       <nav className="top">
+        <NavLink to="/novels" className={({ isActive }) => (isActive ? 'active' : '')}>
+          风雨楼
+        </NavLink>
         <NavLink to="/videos" className={({ isActive }) => (isActive ? 'active' : '')}>
           全部视频
         </NavLink>

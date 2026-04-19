@@ -32,3 +32,17 @@ export type FolderListing = {
   subfolders: { name: string; videoCount: number }[];
   files: { id: number; filename: string; path: string }[];
 };
+
+export type NovelListItem = {
+  id: number;
+  name: string;
+  author: string;
+  wordCount: number;
+  starRating: number;
+  readCount: number;
+};
+
+export type NovelPageResponse = NovelListItem & {
+  content: string;
+  pageSize: number;
+};

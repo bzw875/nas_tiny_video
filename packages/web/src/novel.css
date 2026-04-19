@@ -1,0 +1,163 @@
+.novel-shell {
+  max-width: 720px;
+}
+
+.novel-search {
+  width: 100%;
+  margin-bottom: 1rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.25rem;
+}
+
+.novel-nav {
+  list-style: none;
+  display: flex;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.novel-nav a {
+  font-weight: bold;
+  color: #333;
+  text-decoration: none;
+}
+
+.novel-nav a:hover {
+  text-decoration: underline;
+}
+
+.books-table {
+  margin-top: 1rem;
+}
+
+.novel-row {
+  margin-bottom: 1rem;
+}
+
+.novel-title-link {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.novel-title-link:hover {
+  text-decoration: underline;
+}
+
+.anthor-div {
+  word-wrap: break-word;
+}
+
+.novel-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.novel-delete {
+  color: #2563eb;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+}
+
+.novel-delete:hover {
+  text-decoration: underline;
+}
+
+.page-nav a {
+  display: inline-block;
+  padding: 2px;
+  min-width: 30px;
+  text-align: center;
+  text-decoration: none;
+  color: #333;
+}
+
+.page-nav a:hover {
+  color: #000;
+  background-color: #cecece;
+}
+
+.page-nav a:active,
+.page-nav a.active {
+  color: #fff;
+  background-color: #9f7c7c;
+}
+
+.novel-read {
+  display: flex;
+  flex-direction: column;
+}
+
+.novel-read h3 {
+  margin-top: 1rem;
+}
+
+.novel-read pre {
+  width: 100%;
+  white-space: pre-line;
+  margin: 0;
+  font-family: inherit;
+}
+
+.star-list {
+  width: 200px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.star-list span {
+  display: inline-block;
+  padding: 3px;
+  border-radius: 2px;
+  cursor: pointer;
+  color: #666;
+}
+
+.star-list span:hover {
+  background-color: #ffbb1d;
+  color: #fff;
+}
+
+.star-list span.active {
+  color: #ffbb1d;
+}
+
+.quick-nav {
+  display: flex;
+  justify-content: space-between;
+}
+
+.quick-nav a {
+  display: block;
+  margin: 8px;
+  background-color: #dbdbdb;
+  color: #fff;
+  text-align: center;
+  padding: 0.25rem 0.5rem;
+  text-decoration: none;
+  border-radius: 2px;
+}
+
+.quick-nav a:hover {
+  filter: brightness(1.05);
+}
+
+.quick-nav a.disabled {
+  pointer-events: none;
+  opacity: 0.45;
+}
+
+.page-nav .page-jump {
+  width: 50px;
+  margin-left: 0.25rem;
+  padding: 2px 4px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+}
