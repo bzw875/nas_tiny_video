@@ -27,13 +27,12 @@
 ## 数据库
 
 1. 执行 `db-schema.sql` 创建库 `video_manager` 及表 `videos`、`tags`、`video_tags`。
-2. 在 `packages/api/.env` 中配置 Prisma 使用的连接串，例如：
+2. 复制 `packages/api/.env.example` 为 `packages/api/.env`，填写数据库凭证（**不要**把真实密码提交到 Git）：
 
-   ```env
-   DATABASE_URL="mysql://USER:PASSWORD@127.0.0.1:3306/video_manager"
-   ```
+   - 要么设置 `DATABASE_URL`；
+   - 要么只设置 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASSWORD`、`DB_NAME`（未设置 `DATABASE_URL` 时会自动拼成连接串）。
 
-   `import-videos.js` 会尝试从该文件读取 `DATABASE_URL`；也可直接设置环境变量，或使用 `DB_HOST`、`DB_PORT`、`DB_USER`、`DB_PASSWORD`、`DB_NAME`。
+   `import-videos.js` 会读取 `packages/api/.env` 中的上述变量；也可在运行前通过操作系统环境变量注入。
 
 3. 安装依赖并生成 Prisma Client：
 
@@ -46,9 +45,15 @@
 
 | 变量 | 说明 |
 |------|------|
-| `DATABASE_URL` | 必填，MySQL 连接 URL |
+| `DATABASE_URL` | MySQL 连接 URL；与下面分项二选一 |
+| `DB_HOST` | 未设 `DATABASE_URL` 时使用 |
+| `DB_PORT` | 默认 `3306` |
+| `DB_USER` | 未设 `DATABASE_URL` 时必填（与 `DB_HOST` 一起） |
+| `DB_PASSWORD` | 可为空 |
+| `DB_NAME` | 默认 `video_manager` |
 | `PORT` | 监听端口，默认 `4000` |
 | `CORS_ORIGIN` | 可选，逗号分隔的允许来源；不设则开发模式下较宽松 |
+| `NOVEL_TXT_DIR` | 可选，小说 TXT 目录 |
 
 ## 扫描与导入
 

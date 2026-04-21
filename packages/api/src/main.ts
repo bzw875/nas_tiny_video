@@ -14,6 +14,8 @@ function loadEnv() {
   tryLoad('.env.local');
 }
 loadEnv();
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+require('../scripts/synthesize-database-url.cjs').synthesizeDatabaseUrl();
 import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
 

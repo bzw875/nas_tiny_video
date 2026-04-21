@@ -2,28 +2,35 @@ const mysql = require('mysql2/promise');
 const fs = require('fs');
 const path = require('path');
 
-function tryLoadApiEnv() {
+const { synthesizeDatabaseUrl } = require('./packages/api/scripts/synthesize-database-url.cjs');
+
+/** Load packages/api/.env into process.env (does not override existing vars). */
+function loadApiDotenv() {
   const envPath = path.join(__dirname, 'packages/api/.env');
-  if (!fs.existsSync(envPath) || process.env.DATABASE_URL) return;
+  if (!fs.existsSync(envPath)) return;
   const text = fs.readFileSync(envPath, 'utf8');
   for (const line of text.split('\n')) {
-    const m = line.match(/^\s*DATABASE_URL\s*=\s*(.*)$/);
-    if (m) {
-      let v = m[1].trim();
-      if (
-        (v.startsWith('"') && v.endsWith('"')) ||
-        (v.startsWith("'") && v.endsWith("'"))
-      ) {
-        v = v.slice(1, -1);
-      }
-      process.env.DATABASE_URL = v;
-      break;
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq <= 0) continue;
+    const key = trimmed.slice(0, eq).trim();
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(key)) continue;
+    if (process.env[key] !== undefined) continue;
+    let v = trimmed.slice(eq + 1).trim();
+    if (
+      (v.startsWith('"') && v.endsWith('"')) ||
+      (v.startsWith("'") && v.endsWith("'"))
+    ) {
+      v = v.slice(1, -1);
     }
+    process.env[key] = v;
   }
 }
 
 function getDbConfig() {
-  tryLoadApiEnv();
+  loadApiDotenv();
+  synthesizeDatabaseUrl();
   const urlStr = process.env.DATABASE_URL;
   if (urlStr) {
     const u = new URL(urlStr.trim());

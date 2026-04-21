@@ -8,7 +8,9 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:prod": "node dist/main",
-    "prisma:generate": "prisma generate"
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "node scripts/synthesize-database-url.cjs && prisma migrate dev",
+    "prisma:push": "node scripts/synthesize-database-url.cjs && prisma db push"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
