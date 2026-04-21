@@ -13,6 +13,7 @@ import type { Tag, Video } from '../api/types';
 import { VideoTagsEditor } from '../components/VideoTagsEditor';
 import { VIDEO_EXTENSIONS } from '../constants/videoExtensions';
 import { formatDateTime, formatSize } from '../lib/format';
+import { buildIinaWeblink } from '../lib/iina';
 
 const ALLOWED_EXT_SET = new Set<string>(VIDEO_EXTENSIONS);
 
@@ -371,7 +372,13 @@ export function VideosPage() {
               <tr key={v.id}>
                 <td>{v.id}</td>
                 <td className="cell-filename" title={v.filename}>
-                  {v.filename}
+                  <a
+                    className="filename-link-btn"
+                    href={buildIinaWeblink(v.path)}
+                    title="点击用 IINA 播放"
+                  >
+                    {v.filename}
+                  </a>
                 </td>
                 <td className="cell-path" title={v.path}>
                   {v.path}

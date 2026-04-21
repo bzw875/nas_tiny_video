@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getFolderListing } from '../api/videos';
 import type { FolderListing } from '../api/types';
+import { buildIinaWeblink } from '../lib/iina';
 
 function joinParent(current: string, segment: string): string {
   if (current === '') return `/${segment}/`;
@@ -154,7 +155,13 @@ export function FoldersPage() {
                 <ul className="folder-list">
                   {currentListing.files.map((f) => (
                     <li key={f.id} className="muted">
-                      {f.filename}{' '}
+                      <a
+                        className="filename-link-btn"
+                        href={buildIinaWeblink(f.path)}
+                        title="点击用 IINA 播放"
+                      >
+                        {f.filename}
+                      </a>{' '}
                       <span style={{ fontSize: '0.8rem' }} title={f.path}>
                         (#{f.id})
                       </span>
