@@ -22,6 +22,7 @@ model Video {
 
   @@index([filename], map: "idx_filename")
   @@index([createdTime], map: "idx_created_time")
+  @@index([path], map: "idx_path")
   @@map("videos")
 }
 

@@ -126,6 +126,98 @@ button:disabled {
   margin-bottom: 0.35rem;
 }
 
+/* 目录页：横向分栏树 */
+.folder-tree-panel {
+  overflow: hidden;
+}
+
+.folder-tree-horizontal {
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  gap: 0;
+  overflow-x: auto;
+  padding: 0.25rem 0 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #fff;
+  max-width: 100%;
+}
+
+.folder-tree-column {
+  flex: 0 0 auto;
+  width: min(220px, 42vw);
+  min-height: 8rem;
+  max-height: min(50vh, 22rem);
+  overflow-y: auto;
+  border-right: 1px solid #e2e8f0;
+  padding: 0.35rem 0;
+}
+
+.folder-tree-column:last-child {
+  border-right: none;
+}
+
+.folder-tree-column--branch {
+  border-left: 3px solid #cbd5e1;
+  margin-left: 2px;
+  padding-left: 0.15rem;
+}
+
+.folder-tree-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.folder-tree-list li {
+  margin: 0;
+}
+
+.folder-tree-empty {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.85rem;
+}
+
+button.folder-tree-node {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  padding: 0.4rem 0.65rem;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+}
+
+button.folder-tree-node:hover {
+  background: #f8fafc;
+}
+
+button.folder-tree-node--selected {
+  background: #eff6ff;
+  border-left-color: #2563eb;
+}
+
+.folder-tree-node-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+  font-size: 0.9rem;
+  color: #0f172a;
+}
+
+.folder-tree-node-count {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+}
+
 .breadcrumb {
   font-size: 0.9rem;
   color: #475569;

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { getFolderListing } from '../api/videos';
 import type { FolderListing } from '../api/types';
@@ -9,30 +9,53 @@ function joinParent(current: string, segment: string): string {
   return `${base}${segment}/`;
 }
 
+/** 自左向右：第 i 列对应 pathPrefixes[i] 下的子目录列表；pathPrefixes 长度 = 路径深度 + 1 */
+function pathPrefixesFromParam(parent: string): string[] {
+  const trimmed = parent.replace(/\/+$/, '');
+  const parts = trimmed.split('/').filter(Boolean);
+  const out: string[] = [''];
+  let acc = '';
+  for (const p of parts) {
+    acc = acc ? `${acc}/${p}` : `/${p}`;
+    out.push(`${acc}/`);
+  }
+  return out;
+}
+
 export function FoldersPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const parent = searchParams.get('path') ?? '';
 
-  const [data, setData] = useState<FolderListing | null>(null);
+  const [columns, setColumns] = useState<FolderListing[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErr(null);
-    try {
-      const res = await getFolderListing(parent);
-      setData(res);
-    } catch (e: unknown) {
-      setErr(e instanceof Error ? e.message : '加载失败');
-    } finally {
-      setLoading(false);
-    }
+  const pathPrefixes = useMemo(() => pathPrefixesFromParam(parent), [parent]);
+  const pathSegments = useMemo(() => {
+    const trimmed = parent.replace(/\/+$/, '');
+    return trimmed.split('/').filter(Boolean);
   }, [parent]);
 
   useEffect(() => {
-    load();
-  }, [load]);
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setErr(null);
+      try {
+        const results = await Promise.all(
+          pathPrefixes.map((p) => getFolderListing(p)),
+        );
+        if (!cancelled) setColumns(results);
+      } catch (e: unknown) {
+        if (!cancelled) setErr(e instanceof Error ? e.message : '加载失败');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [pathPrefixes]);
 
   const crumbs = useMemo(() => {
     if (!parent) return [];
@@ -54,12 +77,14 @@ export function FoldersPage() {
     setSearchParams(next);
   }
 
+  const currentListing = columns[columns.length - 1];
+
   return (
     <div>
       <div className="panel">
         <h2 style={{ marginTop: 0 }}>目录视图</h2>
         <p className="muted" style={{ marginTop: '-0.25rem' }}>
-          按文件路径的第一级目录逐级浏览；当前目录下的文件列在下方。
+          横向树状分栏：从左到右逐级展开子目录；最右列为当前路径下的子文件夹。
         </p>
         <div className="breadcrumb">
           <span onClick={() => goPath('')}>根</span>
@@ -75,48 +100,70 @@ export function FoldersPage() {
 
       {err && <div className="panel err">{err}</div>}
 
-      {data && (
+      {!err && columns.length > 0 && (
         <>
-          <div className="panel">
-            <h3 style={{ marginTop: 0 }}>子目录</h3>
-            {data.subfolders.length === 0 ? (
-              <p className="muted">无子目录</p>
-            ) : (
-              <ul className="folder-list">
-                {data.subfolders.map((f) => (
-                  <li key={f.name}>
-                    <button
-                      type="button"
-                      className="primary"
-                      style={{ marginRight: '0.5rem' }}
-                      onClick={() => goPath(joinParent(parent, f.name))}
-                    >
-                      {f.name}
-                    </button>
-                    <span className="muted">{f.videoCount} 个视频</span>
-                  </li>
-                ))}
-              </ul>
-            )}
+          <div className="panel folder-tree-panel">
+            <h3 style={{ marginTop: 0 }}>目录树（横向）</h3>
+            <div className="folder-tree-horizontal" role="tree" aria-label="目录树">
+              {columns.map((listing, colIndex) => {
+                const prefix = pathPrefixes[colIndex];
+                const selectedName =
+                  colIndex < pathSegments.length ? pathSegments[colIndex] : null;
+                return (
+                  <div
+                    key={prefix || 'root'}
+                    className={`folder-tree-column${colIndex > 0 ? ' folder-tree-column--branch' : ''}`}
+                    role="group"
+                    aria-label={prefix ? `子目录：${prefix}` : '根目录'}
+                  >
+                    <ul className="folder-tree-list">
+                      {listing.subfolders.length === 0 ? (
+                        <li className="folder-tree-empty muted">无子目录</li>
+                      ) : (
+                        listing.subfolders.map((f) => {
+                          const isSel = f.name === selectedName;
+                          return (
+                            <li key={f.name}>
+                              <button
+                                type="button"
+                                className={`folder-tree-node${isSel ? ' folder-tree-node--selected' : ''}`}
+                                onClick={() => goPath(joinParent(prefix, f.name))}
+                              >
+                                <span className="folder-tree-node-name">{f.name}</span>
+                                <span className="folder-tree-node-count muted">
+                                  {f.videoCount}
+                                </span>
+                              </button>
+                            </li>
+                          );
+                        })
+                      )}
+                    </ul>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="panel">
-            <h3 style={{ marginTop: 0 }}>当前目录中的文件</h3>
-            {data.files.length === 0 ? (
-              <p className="muted">无文件</p>
-            ) : (
-              <ul className="folder-list">
-                {data.files.map((f) => (
-                  <li key={f.id} className="muted">
-                    {f.filename}{' '}
-                    <span style={{ fontSize: '0.8rem' }} title={f.path}>
-                      (#{f.id})
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+          {currentListing && (
+            <div className="panel">
+              <h3 style={{ marginTop: 0 }}>当前目录中的文件</h3>
+              {currentListing.files.length === 0 ? (
+                <p className="muted">无文件</p>
+              ) : (
+                <ul className="folder-list">
+                  {currentListing.files.map((f) => (
+                    <li key={f.id} className="muted">
+                      {f.filename}{' '}
+                      <span style={{ fontSize: '0.8rem' }} title={f.path}>
+                        (#{f.id})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
         </>
       )}
     </div>

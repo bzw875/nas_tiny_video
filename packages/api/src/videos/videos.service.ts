@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 // biome-ignore lint/style/useImportType: NestJS 依赖注入需在运行时保留类引用
 import { PrismaService } from '../prisma/prisma.service';
 import type { QueryVideosDto, VideoSortField } from './dto/query-videos.dto';
@@ -82,6 +82,33 @@ function buildOrderBy(
 function normalizeParentPrefix(prefix: string): string {
   if (!prefix) return '';
   return prefix.endsWith('/') ? prefix : `${prefix}/`;
+}
+
+type FolderRow = { id: number; filename: string; path: string };
+
+function aggregateUnderPrefix(rows: FolderRow[], parent: string) {
+  const subfolders = new Map<string, number>();
+  const files: FolderRow[] = [];
+
+  for (const row of rows) {
+    if (!row.path.startsWith(parent)) continue;
+    const rest = row.path.slice(parent.length);
+    if (!rest) continue;
+    const slash = rest.indexOf('/');
+    if (slash === -1) {
+      files.push(row);
+    } else {
+      const name = rest.slice(0, slash);
+      if (name) subfolders.set(name, (subfolders.get(name) ?? 0) + 1);
+    }
+  }
+
+  return {
+    subfolders: [...subfolders.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([name, videoCount]) => ({ name, videoCount })),
+    files,
+  };
 }
 
 @Injectable()
@@ -178,42 +205,49 @@ export class VideosService {
   async getFolderListing(parentPrefix: string) {
     const parent = normalizeParentPrefix(parentPrefix);
 
-    const rows = await this.prisma.video.findMany({
-      select: { id: true, filename: true, path: true },
-    });
-
-    const subfolders = new Map<string, number>();
-    const files: { id: number; filename: string; path: string }[] = [];
-
-    for (const row of rows) {
-      if (parent) {
-        if (!row.path.startsWith(parent)) continue;
-        const rest = row.path.slice(parent.length);
-        if (!rest) continue;
-        const slash = rest.indexOf('/');
-        if (slash === -1) {
-          files.push(row);
-        } else {
-          const name = rest.slice(0, slash);
-          if (name) subfolders.set(name, (subfolders.get(name) ?? 0) + 1);
-        }
-      } else {
-        const segments = row.path.split('/').filter(Boolean);
-        if (segments.length <= 1) {
-          files.push(row);
-        } else {
-          const name = segments[0];
-          subfolders.set(name, (subfolders.get(name) ?? 0) + 1);
-        }
-      }
+    if (parent) {
+      const rows = await this.prisma.video.findMany({
+        where: { path: { startsWith: parent } },
+        select: { id: true, filename: true, path: true },
+      });
+      const { subfolders, files } = aggregateUnderPrefix(rows, parent);
+      return { parent: parentPrefix, subfolders, files };
     }
+
+    const [subfolderRows, fileRows] = await Promise.all([
+      this.prisma.$queryRaw<{ name: string; videoCount: bigint }[]>(
+        Prisma.sql`
+          SELECT
+            SUBSTRING_INDEX(TRIM(BOTH '/' FROM \`path\`), '/', 1) AS \`name\`,
+            COUNT(*) AS \`videoCount\`
+          FROM videos
+          WHERE \`path\` IS NOT NULL
+            AND LOCATE('/', TRIM(BOTH '/' FROM \`path\`)) > 0
+          GROUP BY \`name\`
+          HAVING \`name\` <> ''
+          ORDER BY \`name\`
+        `,
+      ),
+      this.prisma.$queryRaw<FolderRow[]>(
+        Prisma.sql`
+          SELECT id, filename, \`path\`
+          FROM videos
+          WHERE \`path\` IS NOT NULL
+            AND LOCATE('/', TRIM(BOTH '/' FROM \`path\`)) = 0
+          ORDER BY id ASC
+        `,
+      ),
+    ]);
+
+    const subfolders = subfolderRows.map((r) => ({
+      name: r.name,
+      videoCount: Number(r.videoCount),
+    }));
 
     return {
       parent: parentPrefix,
-      subfolders: [...subfolders.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([name, videoCount]) => ({ name, videoCount })),
-      files,
+      subfolders,
+      files: fileRows,
     };
   }
 
