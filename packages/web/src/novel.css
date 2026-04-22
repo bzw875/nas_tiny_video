@@ -1,163 +1,338 @@
+/* ═══════════════════════════════════════════════════════════════════
+   NOVEL STYLES — Cinematic Dark Theme
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Novel Shell ─── */
 .novel-shell {
   max-width: 720px;
+  margin: 0 auto;
 }
 
+/* ─── Search ─── */
 .novel-search {
   width: 100%;
-  margin-bottom: 1rem;
-  padding: 0.25rem 0.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.25rem;
+  margin-bottom: var(--space-lg);
+  padding: var(--space-md) var(--space-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-size: 1rem;
+  transition: border-color var(--duration-fast) var(--ease-out),
+              box-shadow var(--duration-fast) var(--ease-out);
 }
 
+.novel-search:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+}
+
+.novel-search::placeholder {
+  color: var(--text-muted);
+}
+
+/* ─── Navigation ─── */
 .novel-nav {
   list-style: none;
   display: flex;
-  gap: 10px;
+  gap: var(--space-md);
   padding: 0;
   margin: 0;
 }
 
 .novel-nav a {
-  font-weight: bold;
-  color: #333;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  padding: var(--space-xs) var(--space-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
   text-decoration: none;
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
 }
 
 .novel-nav a:hover {
-  text-decoration: underline;
+  color: var(--text-primary);
+  background: var(--bg-hover);
 }
 
+.novel-nav a.active {
+  color: var(--bg-deep);
+  background: var(--accent);
+}
+
+/* ─── Novel List ─── */
 .books-table {
-  margin-top: 1rem;
+  margin-top: var(--space-lg);
 }
 
 .novel-row {
-  margin-bottom: 1rem;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--border);
+  transition: background var(--duration-fast) var(--ease-out);
+}
+
+.novel-row:hover {
+  background: var(--bg-hover);
 }
 
 .novel-title-link {
-  color: #2563eb;
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
   text-decoration: none;
+  margin-bottom: var(--space-xs);
+  transition: color var(--duration-fast) var(--ease-out);
 }
 
 .novel-title-link:hover {
-  text-decoration: underline;
+  color: var(--accent);
 }
 
 .anthor-div {
-  word-wrap: break-word;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  margin-bottom: var(--space-sm);
 }
 
 .novel-meta-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: var(--space-md);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.novel-meta-row span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 .novel-delete {
-  color: #2563eb;
+  color: var(--danger);
   cursor: pointer;
   background: none;
   border: none;
-  padding: 0;
+  padding: var(--space-xs) var(--space-sm);
   font: inherit;
+  font-size: 0.8rem;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast) var(--ease-out);
 }
 
 .novel-delete:hover {
-  text-decoration: underline;
+  opacity: 1;
+  background: var(--danger-bg);
+  border-radius: var(--radius-sm);
 }
 
-.page-nav a {
-  display: inline-block;
-  padding: 2px;
-  min-width: 30px;
-  text-align: center;
-  text-decoration: none;
-  color: #333;
-}
-
-.page-nav a:hover {
-  color: #000;
-  background-color: #cecece;
-}
-
-.page-nav a:active,
-.page-nav a.active {
-  color: #fff;
-  background-color: #9f7c7c;
-}
-
+/* ─── Novel Reader ─── */
 .novel-read {
   display: flex;
   flex-direction: column;
+  animation: slideIn 0.4s var(--ease-out);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .novel-read h3 {
-  margin-top: 1rem;
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.4rem;
+  color: var(--text-primary);
+  letter-spacing: 0.02em;
+}
+
+.novel-read .author {
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  margin-bottom: var(--space-lg);
 }
 
 .novel-read pre {
   width: 100%;
   white-space: pre-line;
+  font-family: var(--font-body);
+  font-size: 1rem;
+  line-height: 1.8;
+  color: var(--text-primary);
   margin: 0;
-  font-family: inherit;
+  padding: var(--space-lg) 0;
+  text-align: justify;
 }
 
+/* ─── Star Rating ─── */
 .star-list {
-  width: 200px;
   display: flex;
-  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-lg);
 }
 
 .star-list span {
-  display: inline-block;
-  padding: 3px;
-  border-radius: 2px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  font-size: 1.1rem;
   cursor: pointer;
-  color: #666;
+  color: var(--text-muted);
+  border-radius: var(--radius-sm);
+  transition: all var(--duration-fast) var(--ease-out);
 }
 
 .star-list span:hover {
-  background-color: #ffbb1d;
-  color: #fff;
+  color: var(--accent);
+  background: rgba(212, 165, 116, 0.15);
+  transform: scale(1.1);
 }
 
 .star-list span.active {
-  color: #ffbb1d;
+  color: var(--accent);
 }
 
+/* ─── Quick Nav ─── */
 .quick-nav {
   display: flex;
   justify-content: space-between;
+  padding: var(--space-lg) 0;
 }
 
 .quick-nav a {
   display: block;
-  margin: 8px;
-  background-color: #dbdbdb;
-  color: #fff;
+  padding: var(--space-sm) var(--space-lg);
+  background: var(--bg-elevated);
+  color: var(--text-primary);
   text-align: center;
-  padding: 0.25rem 0.5rem;
   text-decoration: none;
-  border-radius: 2px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  transition: all var(--duration-fast) var(--ease-out);
 }
 
 .quick-nav a:hover {
-  filter: brightness(1.05);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg-deep);
 }
 
 .quick-nav a.disabled {
   pointer-events: none;
-  opacity: 0.45;
+  opacity: 0.4;
+}
+
+/* ─── Page Nav ─── */
+.page-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-lg) 0;
+}
+
+.page-nav a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--space-sm);
+  text-decoration: none;
+  color: var(--text-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.page-nav a:hover {
+  color: var(--text-primary);
+  border-color: var(--border-light);
+  background: var(--bg-hover);
+}
+
+.page-nav a.active {
+  color: var(--bg-deep);
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.page-nav a.disabled {
+  pointer-events: none;
+  opacity: 0.4;
 }
 
 .page-nav .page-jump {
-  width: 50px;
-  margin-left: 0.25rem;
-  padding: 2px 4px;
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
+  width: 60px;
+  height: 36px;
+  padding: 0 var(--space-sm);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.page-nav .page-jump:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+/* ─── Page Info ─── */
+.page-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  padding: var(--space-md) 0;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 640px) {
+  .novel-row {
+    padding: var(--space-md) var(--space-sm);
+  }
+
+  .novel-title-link {
+    font-size: 1rem;
+  }
+
+  .novel-meta-row {
+    gap: var(--space-sm);
+    font-size: 0.75rem;
+  }
+
+  .star-list span {
+    width: 28px;
+    height: 28px;
+    font-size: 1rem;
+  }
+
+  .page-nav a {
+    min-width: 32px;
+    height: 32px;
+    font-size: 0.85rem;
+  }
 }
