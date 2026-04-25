@@ -14,6 +14,15 @@ const listSelect = {
   readCount: true,
 } as const;
 
+const pageBaseSelect = {
+  id: true,
+  name: true,
+  author: true,
+  wordCount: true,
+  starRating: true,
+  readCount: true,
+} as const;
+
 export type NovelListItem = Pick<
   NovelRow,
   'id' | 'name' | 'author' | 'wordCount' | 'starRating' | 'readCount'
@@ -58,21 +67,35 @@ export class NovelsService {
    * GET /novel/:id 分页正文 + 增加阅读次数（行为对齐 txtOnlineRead AppController.getNovel）
    */
   async getNovelPage(id: number, page?: number): Promise<NovelWithPage> {
-    const novel = await this.getNovel(id);
-    if (!novel) throw new NotFoundException('Novel not found');
+    const pageNum = Math.max((page ?? 1) - 1, 0);
+    const start = pageNum * NOVEL_PAGE_SIZE + 1;
+    const len = NOVEL_PAGE_SIZE;
 
-    const pageNum = (page ?? 1) - 1;
-    const i = pageNum * NOVEL_PAGE_SIZE;
-    const j = pageNum * NOVEL_PAGE_SIZE + NOVEL_PAGE_SIZE;
-    const copyObj = { ...novel };
-    copyObj.content = copyObj.content.slice(i, j);
+    const [novel, contentRows] = await Promise.all([
+      this.prisma.novel.findUnique({
+        where: { id },
+        select: pageBaseSelect,
+      }),
+      this.prisma.$queryRaw<Array<{ content: string | null }>>`
+        SELECT SUBSTRING(content, ${start}, ${len}) AS content
+        FROM novel
+        WHERE id = ${id}
+        LIMIT 1
+      `,
+    ]);
+
+    if (!novel) throw new NotFoundException('Novel not found');
 
     await this.prisma.novel.update({
       where: { id },
-      data: { readCount: novel.readCount + 1 },
+      data: { readCount: { increment: 1 } },
     });
 
-    return { ...copyObj, pageSize: NOVEL_PAGE_SIZE };
+    return {
+      ...novel,
+      content: contentRows[0]?.content ?? '',
+      pageSize: NOVEL_PAGE_SIZE,
+    };
   }
 
   /** POST /novel/:id — 与原文一致：用 body 中的 starRating 更新（缺省则保留原值） */

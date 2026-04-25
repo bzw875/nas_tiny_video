@@ -347,11 +347,6 @@ export function VideosPage() {
                   修改时间{sortMark('modifiedTime')}
                 </button>
               </th>
-              <th>
-                <button type="button" className="th-sort" onClick={() => setSort('videoKey')}>
-                  videoKey{sortMark('videoKey')}
-                </button>
-              </th>
               <th title="按标签数量排序">
                 <button type="button" className="th-sort" onClick={() => setSort('tags')}>
                   标签{sortMark('tags')}
@@ -363,7 +358,7 @@ export function VideosPage() {
           <tbody>
             {!loading && items.length === 0 && (
               <tr>
-                <td colSpan={10} className="muted" style={{ textAlign: 'center', padding: '1.25rem' }}>
+                <td colSpan={9} className="muted" style={{ textAlign: 'center', padding: '1.25rem' }}>
                   暂无数据
                 </td>
               </tr>
@@ -387,9 +382,6 @@ export function VideosPage() {
                 <td>{formatSize(v.size)}</td>
                 <td>{formatDateTime(v.createdTime)}</td>
                 <td>{formatDateTime(v.modifiedTime)}</td>
-                <td className="cell-key" title={v.videoKey ?? ''}>
-                  {v.videoKey ?? '—'}
-                </td>
                 <td>
                   {v.tags.length === 0 && <span className="muted">无</span>}
                   {v.tags.map((t) => (

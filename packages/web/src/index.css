@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════════════
-   CINEMATIC DARK THEME — Media Library Aesthetic
+   Media library theme — dark default, light when prefers-color-scheme: light
    ═══════════════════════════════════════════════════════════════════ */
 
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=DM+Sans:wght@400;500;600&display=swap');
@@ -25,6 +25,18 @@
   --danger: #c75050;
   --danger-bg: #2a1515;
   --success: #5a9a6a;
+
+  /* Text / UI on accent-colored surfaces (works in both themes) */
+  --on-accent: #101010;
+  --grain-opacity: 0.035;
+  --focus-ring: 0 0 0 3px rgba(212, 165, 116, 0.15);
+  --accent-tint-nav: rgba(212, 165, 116, 0.1);
+  --accent-tint-row-hover: rgba(212, 165, 116, 0.25);
+  --accent-tint-chip: rgba(212, 165, 116, 0.12);
+  --accent-tint-chip-mid: rgba(212, 165, 116, 0.15);
+  --accent-tint-folder: rgba(212, 165, 116, 0.1);
+  --selection-bg: rgba(212, 165, 116, 0.3);
+  --dialog-backdrop: rgba(0, 0, 0, 0.75);
 
   /* ─── Typography ─── */
   --font-display: 'Noto Serif SC', Georgia, serif;
@@ -61,6 +73,7 @@
 html {
   font-size: 15px;
   scroll-behavior: smooth;
+  color-scheme: dark;
 }
 
 body {
@@ -82,7 +95,7 @@ body::before {
   inset: 0;
   pointer-events: none;
   z-index: 9999;
-  opacity: 0.035;
+  opacity: var(--grain-opacity);
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
@@ -139,7 +152,7 @@ nav.top {
   width: 32px;
   height: 32px;
   background: var(--accent);
-  color: var(--bg-deep);
+  color: var(--on-accent);
   border-radius: var(--radius-sm);
   font-size: 0.75rem;
 }
@@ -167,7 +180,7 @@ nav.top a:hover {
 
 nav.top a.active {
   color: var(--accent);
-  background: rgba(212, 165, 116, 0.1);
+  background: var(--accent-tint-nav);
 }
 
 /* ─── Panel ─── */
@@ -231,7 +244,7 @@ input[type="email"]:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 input::placeholder {
@@ -259,7 +272,7 @@ button:hover {
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg-deep);
+  color: var(--on-accent);
 }
 
 button.primary:hover {
@@ -330,7 +343,7 @@ table.data td .tag-chip {
   padding: 2px 8px;
   border-radius: 999px;
   font-size: 0.75rem;
-  background: rgba(212, 165, 116, 0.15);
+  background: var(--accent-tint-chip-mid);
   color: var(--accent);
   margin-right: var(--space-xs);
   margin-bottom: var(--space-xs);
@@ -338,7 +351,7 @@ table.data td .tag-chip {
 }
 
 table.data td .tag-chip:hover {
-  background: rgba(212, 165, 116, 0.25);
+  background: var(--accent-tint-row-hover);
 }
 
 /* Video table */
@@ -422,7 +435,7 @@ a.filename-link-btn:hover {
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
-  background: rgba(212, 165, 116, 0.12);
+  background: var(--accent-tint-chip);
   color: var(--accent);
   margin-right: var(--space-xs);
   margin-bottom: var(--space-xs);
@@ -552,7 +565,7 @@ button.folder-tree-node:hover {
 }
 
 button.folder-tree-node--selected {
-  background: rgba(212, 165, 116, 0.1);
+  background: var(--accent-tint-folder);
   border-left-color: var(--accent);
 }
 
@@ -596,7 +609,7 @@ dialog.tag-dialog {
 }
 
 dialog.tag-dialog::backdrop {
-  background: rgba(0, 0, 0, 0.75);
+  background: var(--dialog-backdrop);
   backdrop-filter: blur(4px);
 }
 
@@ -611,18 +624,28 @@ dialog.tag-dialog::backdrop {
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
   background: var(--bg-deep);
-}
-
-.tag-editor-scroll label {
   display: flex;
-  gap: var(--space-sm);
-  align-items: center;
-  font-size: 0.9rem;
-  padding: var(--space-xs) 0;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
 }
 
-.tag-editor-scroll input[type="checkbox"] {
-  accent-color: var(--accent);
+.tag-editor-scroll .tag-chip {
+  border: 1px solid transparent;
+  cursor: pointer;
+  margin-right: 0;
+  transition:
+    background var(--duration-fast) var(--ease-out),
+    color var(--duration-fast) var(--ease-out),
+    border-color var(--duration-fast) var(--ease-out);
+}
+
+.tag-editor-scroll .tag-chip:hover {
+  border-color: var(--accent-dim);
+}
+
+.tag-editor-scroll .tag-chip--selected {
+  background: var(--accent);
+  color: var(--on-accent);
 }
 
 /* ─── Utility ─── */
@@ -651,6 +674,49 @@ dialog.tag-dialog::backdrop {
 
 /* Selection */
 ::selection {
-  background: rgba(212, 165, 116, 0.3);
+  background: var(--selection-bg);
   color: var(--text-primary);
+}
+
+@media (prefers-color-scheme: light) {
+  html {
+    color-scheme: light;
+  }
+
+  :root {
+    --bg-deep: #f2efe8;
+    --bg-surface: #faf9f6;
+    --bg-elevated: #ebe6dc;
+    --bg-hover: #e2ddd2;
+
+    --text-primary: #1a1814;
+    --text-secondary: #4d483f;
+    --text-muted: #7a7268;
+
+    --accent: #8f6238;
+    --accent-hover: #a67442;
+    --accent-dim: #6b4d32;
+
+    --border: #d4cdc0;
+    --border-light: #c2b9a9;
+
+    --danger: #a83838;
+    --danger-bg: #f3e6e6;
+    --success: #2d6b3e;
+
+    --shadow-sm: 0 2px 8px rgba(26, 24, 20, 0.06);
+    --shadow-md: 0 4px 20px rgba(26, 24, 20, 0.08);
+    --shadow-lg: 0 8px 40px rgba(26, 24, 20, 0.1);
+
+    --on-accent: #121210;
+    --grain-opacity: 0.022;
+    --focus-ring: 0 0 0 3px rgba(143, 98, 56, 0.22);
+    --accent-tint-nav: rgba(143, 98, 56, 0.12);
+    --accent-tint-row-hover: rgba(143, 98, 56, 0.2);
+    --accent-tint-chip: rgba(143, 98, 56, 0.12);
+    --accent-tint-chip-mid: rgba(143, 98, 56, 0.16);
+    --accent-tint-folder: rgba(143, 98, 56, 0.1);
+    --selection-bg: rgba(143, 98, 56, 0.22);
+    --dialog-backdrop: rgba(26, 24, 20, 0.4);
+  }
 }

@@ -17,8 +17,8 @@ export function PageNav({ pageInfo }: PageNavProps) {
 
   const pages = useMemo(() => {
     const arr: number[] = [1];
-    const start = Math.max(currPage - 8, 1);
-    const end = Math.min(currPage + 8, arrPages);
+    const start = Math.max(currPage - 4, 1);
+    const end = Math.min(currPage + 4, arrPages);
     for (let i = start; i <= end; i++) {
       arr.push(i);
     }
@@ -35,7 +35,7 @@ export function PageNav({ pageInfo }: PageNavProps) {
         <Link
           to={path(currPage - 1)}
           className={currPage <= 1 ? 'disabled' : ''}
-          style={{ width: '30%' }}
+          style={{ width: '50%' }}
           onClick={(e) => {
             if (currPage <= 1) e.preventDefault();
           }}
@@ -45,7 +45,7 @@ export function PageNav({ pageInfo }: PageNavProps) {
         <Link
           to={path(currPage + 1)}
           className={currPage >= arrPages ? 'disabled' : ''}
-          style={{ width: '70%' }}
+          style={{ width: '50%' }}
           onClick={(e) => {
             if (currPage >= arrPages) e.preventDefault();
           }}

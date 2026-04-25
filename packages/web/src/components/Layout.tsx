@@ -6,9 +6,6 @@ export function Layout() {
       <nav className="top">
         <div className="nav-brand">
           <span className="brand-icon">▶</span>
-          <NavLink to="/novels" className={({ isActive }) => (isActive ? 'active' : '')}>
-            风雨楼
-          </NavLink>
         </div>
         <div className="nav-links">
           <NavLink to="/novels" className={({ isActive }) => (isActive ? 'active' : '')}>

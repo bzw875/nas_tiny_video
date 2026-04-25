@@ -54,30 +54,22 @@ export function VideoTagsEditor({ video, onUpdated, onClose }: Props) {
       {err && <div className="err">{err}</div>}
       <div className="tag-editor-scroll">
         {sortedTags.map((t) => (
-          <label
+          <button
+            type="button"
             key={t.id}
-            style={{
-              display: 'flex',
-              gap: '0.35rem',
-              alignItems: 'center',
-              fontSize: '0.9rem',
-              marginBottom: 2,
+            className={`tag-chip ${selected.has(t.id) ? 'tag-chip--selected' : ''}`}
+            aria-pressed={selected.has(t.id)}
+            onClick={() => {
+              setSelected((prev) => {
+                const n = new Set(prev);
+                if (n.has(t.id)) n.delete(t.id);
+                else n.add(t.id);
+                return n;
+              });
             }}
           >
-            <input
-              type="checkbox"
-              checked={selected.has(t.id)}
-              onChange={() => {
-                setSelected((prev) => {
-                  const n = new Set(prev);
-                  if (n.has(t.id)) n.delete(t.id);
-                  else n.add(t.id);
-                  return n;
-                });
-              }}
-            />
             {t.name}
-          </label>
+          </button>
         ))}
       </div>
       <div style={{ marginTop: '0.65rem', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>

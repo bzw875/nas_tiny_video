@@ -25,7 +25,7 @@
 .novel-search:focus {
   outline: none;
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(212, 165, 116, 0.15);
+  box-shadow: var(--focus-ring);
 }
 
 .novel-search::placeholder {
@@ -60,7 +60,7 @@
 }
 
 .novel-nav a.active {
-  color: var(--bg-deep);
+  color: var(--on-accent);
   background: var(--accent);
 }
 
@@ -200,7 +200,7 @@
 
 .star-list span:hover {
   color: var(--accent);
-  background: rgba(212, 165, 116, 0.15);
+  background: var(--accent-tint-chip-mid);
   transform: scale(1.1);
 }
 
@@ -230,7 +230,7 @@
 .quick-nav a:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--bg-deep);
+  color: var(--on-accent);
 }
 
 .quick-nav a.disabled {
@@ -271,7 +271,7 @@
 }
 
 .page-nav a.active {
-  color: var(--bg-deep);
+  color: var(--on-accent);
   background: var(--accent);
   border-color: var(--accent);
 }
