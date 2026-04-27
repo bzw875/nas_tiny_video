@@ -35,12 +35,12 @@ export function PageNav({ pageInfo }: PageNavProps) {
         <Link
           to={path(currPage - 1)}
           className={currPage <= 1 ? 'disabled' : ''}
-          style={{ width: '50%' }}
+          style={{ width: '50%', marginRight: '10px' }}
           onClick={(e) => {
             if (currPage <= 1) e.preventDefault();
           }}
         >
-          上一页
+          &lt;&lt;
         </Link>
         <Link
           to={path(currPage + 1)}
@@ -50,7 +50,7 @@ export function PageNav({ pageInfo }: PageNavProps) {
             if (currPage >= arrPages) e.preventDefault();
           }}
         >
-          下一页
+          &gt;&gt;
         </Link>
       </div>
       {pages.map((p) => (
@@ -59,7 +59,7 @@ export function PageNav({ pageInfo }: PageNavProps) {
           to={path(p)}
           className={p === currPage ? 'active' : ''}
         >
-          {p === 1 ? '首页' : p}
+          {p === 1 ? '1' : p}
         </Link>
       ))}
       <input

@@ -49,7 +49,7 @@ export function NovelHome() {
                 {tmp.name.replace('.txt', '')}
               </Link>
             </div>
-            <div className="anthor-div">{tmp.author}</div>
+            <div className="anthor-div text-ellipsis">{tmp.author}</div>
             <div className="novel-meta-row">
               <span>{formatCount(tmp.wordCount)}字</span>
               <span>{tmp.starRating}⭐️</span>

@@ -1,0 +1,23 @@
+server:
+  port: ${PORT:4000}
+
+spring:
+  application:
+    name: video-manager-api
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:video_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:}
+  jackson:
+    time-zone: Asia/Shanghai
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  cors-origin: ${CORS_ORIGIN:}
+  novel-txt-dir: ${NOVEL_TXT_DIR:./txt}

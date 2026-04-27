@@ -93,7 +93,11 @@
 .novel-title-link:hover {
   color: var(--accent);
 }
-
+.text-ellipsis {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 .anthor-div {
   color: var(--text-secondary);
   font-size: 0.85rem;

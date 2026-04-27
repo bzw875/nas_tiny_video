@@ -185,10 +185,7 @@ nav.top a.active {
 
 /* ─── Panel ─── */
 .panel {
-  background: var(--bg-surface);
-  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: var(--space-lg);
   margin-bottom: var(--space-md);
   transition: border-color var(--duration-normal) var(--ease-out);
 }

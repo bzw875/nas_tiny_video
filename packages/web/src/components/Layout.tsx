@@ -20,6 +20,9 @@ export function Layout() {
           <NavLink to="/tags" className={({ isActive }) => (isActive ? 'active' : '')}>
             标签
           </NavLink>
+          <a href="http://192.168.1.19:61208/" target="_blank" rel="noopener noreferrer">
+          glances
+          </a>
         </div>
       </nav>
       <Outlet />
