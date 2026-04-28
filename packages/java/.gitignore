@@ -42,6 +42,7 @@ build/
 
 # Gradle
 .gradle/
+.m2repo/
 build/
 
 # Maven
