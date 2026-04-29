@@ -1,6 +1,5 @@
 package com.videomanager.config;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -12,10 +11,8 @@ public class JacksonConfig {
     @Bean
     Jackson2ObjectMapperBuilderCustomizer jackson2ObjectMapperBuilderCustomizer() {
         return builder -> {
-            SimpleModule module = new SimpleModule();
-            module.addSerializer(Long.class, ToStringSerializer.instance);
-            module.addSerializer(Long.TYPE, ToStringSerializer.instance);
-            builder.modules(module);
+            builder.serializerByType(Long.class, ToStringSerializer.instance);
+            builder.serializerByType(Long.TYPE, ToStringSerializer.instance);
         };
     }
 }
