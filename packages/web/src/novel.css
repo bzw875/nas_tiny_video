@@ -245,10 +245,14 @@
 /* ─── Page Nav ─── */
 .page-nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: var(--space-sm);
   padding: var(--space-lg) 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .page-nav a {
@@ -332,6 +336,12 @@
     width: 28px;
     height: 28px;
     font-size: 1rem;
+  }
+
+  .page-nav .quick-nav {
+    flex: 1 1 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .page-nav a {

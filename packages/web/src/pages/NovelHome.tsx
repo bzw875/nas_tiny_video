@@ -16,7 +16,7 @@ export function NovelHome() {
 
   useEffect(() => {
     getAllNovels().then((res) => {
-      if (res) setNovels(res);
+      if (res) setNovels(res.sort(() => Math.random() - 0.5));
     });
   }, []);
 

@@ -16,6 +16,7 @@ export function NovelReader() {
   useEffect(() => {
     const id = params.id;
     if (!id) return;
+    document.getElementById('top')?.scrollIntoView({ behavior: 'instant' });
     getNovel(id, page).then((res) => setNovelObj(res));
   }, [params.id, page]);
 
