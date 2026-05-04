@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { Aish123Home } from './pages/Aish123Home';
 import { FoldersPage } from './pages/FoldersPage';
 import { NovelHome } from './pages/NovelHome';
 import { NovelReader } from './pages/NovelReader';
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="/videos" element={<VideosPage />} />
         <Route path="/folders" element={<FoldersPage />} />
         <Route path="/tags" element={<TagsPage />} />
+        <Route path="/aish123" element={<Aish123Home />} />
         <Route path="*" element={<Navigate to="/novels" replace />} />
       </Route>
     </Routes>

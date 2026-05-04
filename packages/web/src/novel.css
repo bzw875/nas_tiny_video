@@ -98,6 +98,69 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* aish123 — district / type filter chips */
+.aish-filter-wrap {
+  margin-bottom: 1rem;
+}
+.aish-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.45rem;
+  margin-bottom: 0.45rem;
+}
+.aish-filter-row:last-child {
+  margin-bottom: 0;
+}
+.aish-filter-sep {
+  width: 1px;
+  align-self: stretch;
+  min-height: 1.75rem;
+  margin: 0 0.15rem 0 0.25rem;
+  background: var(--border);
+  flex-shrink: 0;
+}
+.aish-type-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.55rem 0.35rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm, 6px);
+  background: var(--bg-deep);
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+.aish-type-chip:hover {
+  border-color: var(--text-muted);
+  background: var(--bg-hover);
+}
+.aish-type-chip--active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--bg-deep));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 35%, transparent);
+}
+.aish-type-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.35rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+}
+.aish-type-chip--active .aish-type-count {
+  color: var(--on-accent);
+  background: color-mix(in srgb, var(--accent) 55%, transparent);
+}
 .anthor-div {
   color: var(--text-secondary);
   font-size: 0.85rem;
