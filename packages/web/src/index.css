@@ -650,6 +650,150 @@ dialog.tag-dialog::backdrop {
   grid-column: 1 / -1;
 }
 
+/* Gallery */
+.gallery-toolbar {
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
+.gallery-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: var(--space-md);
+  margin-top: var(--space-lg);
+}
+
+.gallery-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-elevated);
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out),
+    transform var(--duration-fast) var(--ease-out);
+}
+
+.gallery-card:hover {
+  border-color: var(--accent-dim);
+  box-shadow: var(--shadow-sm);
+  transform: translateY(-1px);
+}
+
+.gallery-card:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+.gallery-card img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+  background: var(--bg-deep);
+}
+
+.gallery-card-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: var(--space-sm) var(--space-sm) var(--space-md);
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.gallery-card-name {
+  font-family: var(--font-body);
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gallery-pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border);
+}
+
+.gallery-lightbox-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--dialog-backdrop);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-lg);
+  animation: gallery-fade-in var(--duration-normal) var(--ease-out);
+}
+
+@keyframes gallery-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.gallery-lightbox-inner {
+  position: relative;
+  max-width: min(96vw, 1200px);
+  max-height: min(92vh, 900px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.gallery-lightbox-inner img {
+  max-width: 100%;
+  max-height: min(78vh, 800px);
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+}
+
+.gallery-lightbox-close {
+  position: absolute;
+  top: -2.75rem;
+  right: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: var(--space-xs);
+  opacity: 0.85;
+}
+
+.gallery-lightbox-close:hover {
+  opacity: 1;
+  color: var(--accent-hover);
+}
+
+.gallery-lightbox-caption {
+  text-align: center;
+  font-size: 0.85rem;
+  max-width: 100%;
+  word-break: break-all;
+}
+
 /* Scrollbar styling */
 ::-webkit-scrollbar {
   width: 8px;

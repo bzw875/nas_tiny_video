@@ -20,10 +20,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
 const distDir = path.join(__dirname, "dist");
 
-const host = '192.168.1.19';
+const host = '192.168.1.22';
 const user = "root";
-const remotePath = '/root/wwww/html';
-const password = process.env.UBUNTU_PASSWORD;
+const remotePath = '/var/www/html';
+const password = process.env.DEPLOY_PASSWORD;
 
 function fail(msg) {
   console.error(msg);

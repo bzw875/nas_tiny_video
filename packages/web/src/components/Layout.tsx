@@ -14,6 +14,9 @@ export function Layout() {
           <NavLink to="/videos" className={({ isActive }) => (isActive ? 'active' : '')}>
             视频
           </NavLink>
+          <NavLink to="/gallery" className={({ isActive }) => (isActive ? 'active' : '')}>
+            图片
+          </NavLink>
           <NavLink to="/folders" className={({ isActive }) => (isActive ? 'active' : '')}>
             目录
           </NavLink>
@@ -23,7 +26,7 @@ export function Layout() {
           <NavLink to="/aish123" className={({ isActive }) => (isActive ? 'active' : '')}>
             aish123
           </NavLink>
-          <a href="http://192.168.1.19:61208/" target="_blank" rel="noopener noreferrer">
+          <a href={`${location.protocol}//${location.host}:61208/`} target="_blank" rel="noopener noreferrer">
           glances
           </a>
         </div>

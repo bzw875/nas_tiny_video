@@ -19,6 +19,12 @@ public class GlobalExceptionHandler {
             .body(ApiError.of("NOT_FOUND", ex.getMessage()));
     }
 
+    @ExceptionHandler(BadRequestException.class)
+    ResponseEntity<ApiError> handleBadRequest(BadRequestException ex) {
+        return ResponseEntity.badRequest()
+            .body(ApiError.of("BAD_REQUEST", ex.getMessage()));
+    }
+
     @ExceptionHandler(DuplicateKeyException.class)
     ResponseEntity<ApiError> handleDuplicate(DuplicateKeyException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT)
