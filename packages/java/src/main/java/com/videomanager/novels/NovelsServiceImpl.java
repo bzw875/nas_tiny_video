@@ -13,18 +13,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.stream.Stream;
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class NovelsServiceImpl implements NovelsService {
     private static final int NOVEL_PAGE_SIZE = 5000;
-    private final JdbcTemplate jdbcTemplate;
+    private final NovelMapper novelMapper;
     private final AppProperties appProperties;
 
-    public NovelsServiceImpl(JdbcTemplate jdbcTemplate, AppProperties appProperties) {
-        this.jdbcTemplate = jdbcTemplate;
+    public NovelsServiceImpl(NovelMapper novelMapper, AppProperties appProperties) {
+        this.novelMapper = novelMapper;
         this.appProperties = appProperties;
     }
 
@@ -32,37 +31,15 @@ public class NovelsServiceImpl implements NovelsService {
     public Object getNovelsLimit(int page, int limit) {
         int safePage = Math.max(page, 1);
         int safeLimit = Math.max(limit, 1);
-        return jdbcTemplate.query(
-            "SELECT id, name, author, wordCount, starRating, readCount FROM novel LIMIT ? OFFSET ?",
-            (rs, rowNum) -> Map.of(
-                "id", rs.getInt("id"),
-                "name", rs.getString("name"),
-                "author", rs.getString("author"),
-                "wordCount", rs.getInt("wordCount"),
-                "starRating", rs.getInt("starRating"),
-                "readCount", rs.getInt("readCount")
-            ),
-            safeLimit,
-            (safePage - 1) * safeLimit
-        );
+        return novelMapper.selectNovelList(safeLimit, (safePage - 1) * safeLimit);
     }
 
     @Override
     public Object getNovelByName(String name) {
         String decoded = URLDecoder.decode(name, StandardCharsets.UTF_8);
-        return jdbcTemplate.query(
-            "SELECT id, name, author, wordCount, content, starRating, readCount FROM novel WHERE name = ?",
-            (rs, rowNum) -> Map.of(
-                "id", rs.getInt("id"),
-                "name", rs.getString("name"),
-                "author", rs.getString("author"),
-                "wordCount", rs.getInt("wordCount"),
-                "content", rs.getString("content"),
-                "starRating", rs.getInt("starRating"),
-                "readCount", rs.getInt("readCount")
-            ),
-            decoded
-        ).stream().findFirst().orElseThrow(() -> new NotFoundException("Novel not found"));
+        return novelMapper.selectNovelByName(decoded).stream()
+            .findFirst()
+            .orElseThrow(() -> new NotFoundException("Novel not found"));
     }
 
     @Override
@@ -70,30 +47,17 @@ public class NovelsServiceImpl implements NovelsService {
     public Object getNovelPage(int id, Integer page) {
         int pageNum = Math.max((page == null ? 1 : page) - 1, 0);
         int start = pageNum * NOVEL_PAGE_SIZE + 1;
-        Map<String, Object> novel = jdbcTemplate.query(
-            "SELECT id, name, author, wordCount, starRating, readCount FROM novel WHERE id = ?",
-            (rs, rowNum) -> {
-                Map<String, Object> row = new java.util.HashMap<>();
-                row.put("id", rs.getInt("id"));
-                row.put("name", rs.getString("name"));
-                row.put("author", rs.getString("author"));
-                row.put("wordCount", rs.getInt("wordCount"));
-                row.put("starRating", rs.getInt("starRating"));
-                row.put("readCount", rs.getInt("readCount"));
-                return row;
-            },
-            id
-        ).stream().findFirst().orElseThrow(() -> new NotFoundException("Novel not found"));
+        Map<String, Object> novel = novelMapper.selectNovelMetaById(id);
+        if (novel == null || novel.isEmpty()) {
+            throw new NotFoundException("Novel not found");
+        }
 
-        String content = jdbcTemplate.query(
-            "SELECT SUBSTRING(content, ?, ?) AS content FROM novel WHERE id = ? LIMIT 1",
-            (rs, rowNum) -> rs.getString("content"),
-            start,
-            NOVEL_PAGE_SIZE,
-            id
-        ).stream().findFirst().orElse("");
+        String content = novelMapper.selectContentSlice(id, start, NOVEL_PAGE_SIZE);
+        if (content == null) {
+            content = "";
+        }
 
-        jdbcTemplate.update("UPDATE novel SET readCount = readCount + 1 WHERE id = ?", id);
+        novelMapper.incrementReadCount(id);
         return Map.of(
             "id", novel.get("id"),
             "name", novel.get("name"),
@@ -101,19 +65,19 @@ public class NovelsServiceImpl implements NovelsService {
             "wordCount", novel.get("wordCount"),
             "starRating", novel.get("starRating"),
             "readCount", novel.get("readCount"),
-            "content", content == null ? "" : content,
+            "content", content,
             "pageSize", NOVEL_PAGE_SIZE
         );
     }
 
     @Override
     public Object updateStarRating(int id, Integer starRating) {
-        Integer current = jdbcTemplate.queryForObject("SELECT starRating FROM novel WHERE id = ?", Integer.class, id);
+        Integer current = novelMapper.selectStarRatingById(id);
         if (current == null) {
             throw new NotFoundException("Novel not found");
         }
         int next = starRating == null ? current : starRating;
-        int affected = jdbcTemplate.update("UPDATE novel SET starRating = ? WHERE id = ?", next, id);
+        int affected = novelMapper.updateStarRating(id, next);
         return Map.of("affected", affected, "raw", java.util.List.of());
     }
 
@@ -129,8 +93,7 @@ public class NovelsServiceImpl implements NovelsService {
                 .filter(path -> path.getFileName().toString().endsWith(".txt"))
                 .forEach(path -> {
                     String filename = path.getFileName().toString();
-                    Integer exists = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM novel WHERE name = ?", Integer.class, filename);
-                    if (exists != null && exists > 0) {
+                    if (novelMapper.countByName(filename) > 0) {
                         return;
                     }
                     try {
@@ -152,10 +115,7 @@ public class NovelsServiceImpl implements NovelsService {
                             }
                         }
                         String name = filename.replace(".text", "");
-                        jdbcTemplate.update(
-                            "INSERT INTO novel (name, content, author, starRating, wordCount, readCount) VALUES (?, ?, ?, ?, ?, ?)",
-                            name, content, author, 0, content.length(), 0
-                        );
+                        novelMapper.insertNovel(name, content, author, 0, content.length(), 0);
                         imported.add(filename);
                     } catch (IOException ignored) {
                         // ignore bad files during scan
@@ -170,7 +130,7 @@ public class NovelsServiceImpl implements NovelsService {
     @Override
     public Map<String, Object> deleteNovel(int id) {
         try {
-            int affected = jdbcTemplate.update("DELETE FROM novel WHERE id = ?", id);
+            int affected = novelMapper.deleteById(id);
             return Map.of("affected", affected, "raw", java.util.List.of());
         } catch (Exception ex) {
             return Map.of("affected", 0, "raw", java.util.List.of());

@@ -4,38 +4,27 @@ import com.videomanager.common.NotFoundException;
 import com.videomanager.tags.dto.CreateTagDto;
 import com.videomanager.tags.dto.TagDto;
 import com.videomanager.tags.dto.UpdateTagDto;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TagsServiceImpl implements TagsService {
-    private final JdbcTemplate jdbcTemplate;
+    private final TagsMapper tagsMapper;
 
-    public TagsServiceImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public TagsServiceImpl(TagsMapper tagsMapper) {
+        this.tagsMapper = tagsMapper;
     }
 
     @Override
     public List<TagDto> findAll() {
-        return jdbcTemplate.query(
-            "SELECT id, name, description, created_at, updated_at FROM tags ORDER BY name ASC",
-            tagRowMapper()
-        );
+        return tagsMapper.findAll();
     }
 
     @Override
     public TagDto findOne(int id) {
-        List<TagDto> tags = jdbcTemplate.query(
-            "SELECT id, name, description, created_at, updated_at FROM tags WHERE id = ?",
-            tagRowMapper(),
-            id
-        );
+        List<TagDto> tags = tagsMapper.findById(id);
         if (tags.isEmpty()) {
             throw new NotFoundException("Tag " + id + " not found");
         }
@@ -49,16 +38,15 @@ public class TagsServiceImpl implements TagsService {
         if (description != null && description.isEmpty()) {
             description = null;
         }
+        TagInsert row = new TagInsert();
+        row.setName(name);
+        row.setDescription(description);
         try {
-            jdbcTemplate.update(
-                "INSERT INTO tags (name, description) VALUES (?, ?)",
-                name,
-                description
-            );
+            tagsMapper.insert(row);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateKeyException("Tag name already exists");
         }
-        Integer id = jdbcTemplate.queryForObject("SELECT id FROM tags WHERE name = ?", Integer.class, name);
+        Integer id = row.getId();
         if (id == null) {
             throw new IllegalStateException("Failed to resolve created tag id");
         }
@@ -75,12 +63,7 @@ public class TagsServiceImpl implements TagsService {
             description = d.isEmpty() ? null : d;
         }
         try {
-            jdbcTemplate.update(
-                "UPDATE tags SET name = ?, description = ? WHERE id = ?",
-                name,
-                description,
-                id
-            );
+            tagsMapper.update(id, name, description);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateKeyException("Tag name already exists");
         }
@@ -90,21 +73,7 @@ public class TagsServiceImpl implements TagsService {
     @Override
     public Object remove(int id) {
         findOne(id);
-        jdbcTemplate.update("DELETE FROM tags WHERE id = ?", id);
+        tagsMapper.deleteById(id);
         return Map.of("ok", true);
-    }
-
-    private RowMapper<TagDto> tagRowMapper() {
-        return (ResultSet rs, int rowNum) -> mapTag(rs);
-    }
-
-    private TagDto mapTag(ResultSet rs) throws SQLException {
-        return new TagDto(
-            rs.getInt("id"),
-            rs.getString("name"),
-            rs.getString("description"),
-            rs.getTimestamp("created_at") == null ? null : rs.getTimestamp("created_at").toLocalDateTime(),
-            rs.getTimestamp("updated_at") == null ? null : rs.getTimestamp("updated_at").toLocalDateTime()
-        );
     }
 }

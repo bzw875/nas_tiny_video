@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.videomanager.aish123.Aish123Mapper">
+
+    <sql id="aish123Columns">
+        a.tid,
+        a.fid,
+        a.title,
+        a.url,
+        a.type_name,
+        a.is_sticky,
+        a.is_digest,
+        a.is_locked,
+        a.has_attachment,
+        a.has_image,
+        a.price,
+        a.author_uid,
+        a.author_name,
+        a.author_url,
+        a.created_at,
+        a.reply_count,
+        a.view_count,
+        a.last_reply_uid,
+        a.last_reply_name,
+        a.last_reply_at,
+        a.rating,
+        a.page_index,
+        a.raw_row_html,
+        a.first_seen_at,
+        a.updated_at
+    </sql>
+
+    <sql id="aish123Where">
+        <where>
+            <if test="fid != null">
+                AND a.fid = #{fid}
+            </if>
+            <choose>
+                <when test="typeNameNone">
+                    AND (a.type_name IS NULL OR TRIM(COALESCE(a.type_name, '')) = '')
+                </when>
+                <when test="typeName != null and typeName != ''">
+                    AND a.type_name = #{typeName}
+                </when>
+            </choose>
+            <if test="search != null and search != ''">
+                AND (a.title LIKE #{search} OR a.author_name LIKE #{search} OR a.last_reply_name LIKE #{search})
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectPage" resultType="java.util.HashMap">
+        SELECT
+        <include refid="aish123Columns"/>
+        FROM `aish123` a
+        <include refid="aish123Where"/>
+        ${orderBySql}
+        LIMIT #{skip}, #{take}
+    </select>
+
+    <select id="countPage" resultType="long">
+        SELECT COUNT(*)
+        FROM `aish123` a
+        <include refid="aish123Where"/>
+    </select>
+
+    <select id="countAll" resultType="long">
+        SELECT COUNT(*) FROM `aish123`
+    </select>
+
+    <select id="selectCountByTypeName" resultType="java.util.HashMap">
+        SELECT a.type_name, COUNT(*) AS cnt
+        FROM `aish123` a
+        GROUP BY a.type_name
+        ORDER BY cnt DESC, a.type_name ASC
+    </select>
+
+    <select id="selectByTid" resultType="java.util.HashMap">
+        SELECT
+        <include refid="aish123Columns"/>
+        FROM `aish123` a
+        WHERE a.tid = #{tid}
+    </select>
+</mapper>

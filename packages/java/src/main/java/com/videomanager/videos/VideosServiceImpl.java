@@ -2,16 +2,12 @@ package com.videomanager.videos;
 
 import com.videomanager.common.NotFoundException;
 import com.videomanager.videos.dto.QueryVideosDto;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,10 +20,10 @@ public class VideosServiceImpl implements VideosService {
         ".h265", ".hevc"
     );
 
-    private final JdbcTemplate jdbcTemplate;
+    private final VideoMapper videoMapper;
 
-    public VideosServiceImpl(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public VideosServiceImpl(VideoMapper videoMapper) {
+        this.videoMapper = videoMapper;
     }
 
     @Override
@@ -37,48 +33,25 @@ public class VideosServiceImpl implements VideosService {
         List<Integer> tagIds = parseTagIds(dto.tagIds());
         List<String> extList = parseExtensionsFilter(dto.extensions());
 
-        StringBuilder where = new StringBuilder(" FROM videos v WHERE 1=1");
-        List<Object> args = new ArrayList<>();
-
+        String pathPrefix = null;
         if (dto.pathPrefix() != null && !dto.pathPrefix().isBlank()) {
-            where.append(" AND v.path LIKE ?");
-            args.add(dto.pathPrefix() + "%");
+            pathPrefix = dto.pathPrefix() + "%";
         }
+        String search = null;
         if (dto.search() != null && !dto.search().isBlank()) {
-            where.append(" AND (v.filename LIKE ? OR v.path LIKE ?)");
-            String search = "%" + dto.search().trim() + "%";
-            args.add(search);
-            args.add(search);
-        }
-        if (!tagIds.isEmpty()) {
-            for (Integer tagId : tagIds) {
-                where.append(" AND EXISTS (SELECT 1 FROM video_tags vt WHERE vt.video_id = v.id AND vt.tag_id = ?)");
-                args.add(tagId);
-            }
-        }
-        if (!extList.isEmpty()) {
-            where.append(" AND v.extension IN (");
-            where.append(extList.stream().map(it -> "?").collect(Collectors.joining(",")));
-            where.append(")");
-            args.addAll(extList);
+            search = "%" + dto.search().trim() + "%";
         }
 
         String orderBy = buildOrderBy(dto.sortBy(), dto.sortOrder());
-        List<Object> listArgs = new ArrayList<>(args);
-        listArgs.add(skip);
-        listArgs.add(take);
+        VideoPageQuery query = new VideoPageQuery(pathPrefix, search, tagIds, extList, orderBy, skip, take);
 
-        String listSql = "SELECT v.id, v.filename, v.path, v.extension, v.size, v.created_time, v.modified_time, v.video_key"
-            + where + orderBy + " LIMIT ?, ?";
-        List<Map<String, Object>> items = jdbcTemplate.query(listSql, listArgs.toArray(), videoRowMapper());
-
-        String countSql = "SELECT COUNT(*)" + where;
-        Long total = jdbcTemplate.queryForObject(countSql, args.toArray(), Long.class);
+        List<Map<String, Object>> items = videoMapper.selectVideoPage(query);
+        long total = videoMapper.countVideos(query);
 
         attachTags(items);
         Map<String, Object> result = new HashMap<>();
         result.put("items", items);
-        result.put("total", total == null ? 0L : total);
+        result.put("total", total);
         result.put("skip", skip);
         result.put("take", take);
         return result;
@@ -86,12 +59,10 @@ public class VideosServiceImpl implements VideosService {
 
     @Override
     public Map<String, Object> findOne(int id) {
-        String sql = "SELECT id, filename, path, extension, size, created_time, modified_time, video_key FROM videos WHERE id = ?";
-        List<Map<String, Object>> rows = jdbcTemplate.query(sql, videoRowMapper(), id);
-        if (rows.isEmpty()) {
+        Map<String, Object> video = videoMapper.selectVideoById(id);
+        if (video == null || video.isEmpty()) {
             throw new NotFoundException("Video " + id + " not found");
         }
-        Map<String, Object> video = rows.get(0);
         attachTags(List.of(video));
         return video;
     }
@@ -100,10 +71,10 @@ public class VideosServiceImpl implements VideosService {
     @Transactional
     public Map<String, Object> updateTags(int id, List<Integer> tagIds) {
         findOne(id);
-        jdbcTemplate.update("DELETE FROM video_tags WHERE video_id = ?", id);
+        videoMapper.deleteVideoTags(id);
         List<Integer> normalized = tagIds == null ? List.of() : tagIds.stream().filter(it -> it != null).distinct().toList();
         for (Integer tagId : normalized) {
-            jdbcTemplate.update("INSERT IGNORE INTO video_tags (video_id, tag_id) VALUES (?, ?)", id, tagId);
+            videoMapper.insertVideoTag(id, tagId);
         }
         return findOne(id);
     }
@@ -115,15 +86,7 @@ public class VideosServiceImpl implements VideosService {
         result.put("parent", parent == null ? "" : parent);
 
         if (!normalizedParent.isEmpty()) {
-            List<Map<String, Object>> rows = jdbcTemplate.query(
-                "SELECT id, filename, path FROM videos WHERE path LIKE ?",
-                (rs, rowNum) -> Map.of(
-                    "id", rs.getInt("id"),
-                    "filename", rs.getString("filename"),
-                    "path", rs.getString("path")
-                ),
-                normalizedParent + "%"
-            );
+            List<Map<String, Object>> rows = videoMapper.selectVideosForFolder(normalizedParent + "%");
             Map<String, Integer> subfolders = new HashMap<>();
             List<Map<String, Object>> files = new ArrayList<>();
             for (Map<String, Object> row : rows) {
@@ -159,26 +122,8 @@ public class VideosServiceImpl implements VideosService {
             return result;
         }
 
-        List<Map<String, Object>> subfolders = jdbcTemplate.query(
-            """
-            SELECT SUBSTRING_INDEX(TRIM(BOTH '/' FROM path), '/', 1) AS name, COUNT(*) AS videoCount
-            FROM videos
-            WHERE path IS NOT NULL AND LOCATE('/', TRIM(BOTH '/' FROM path)) > 0
-            GROUP BY name
-            HAVING name <> ''
-            ORDER BY name
-            """,
-            (rs, rowNum) -> Map.of("name", rs.getString("name"), "videoCount", rs.getInt("videoCount"))
-        );
-        List<Map<String, Object>> files = jdbcTemplate.query(
-            """
-            SELECT id, filename, path
-            FROM videos
-            WHERE path IS NOT NULL AND LOCATE('/', TRIM(BOTH '/' FROM path)) = 0
-            ORDER BY id ASC
-            """,
-            (rs, rowNum) -> Map.of("id", rs.getInt("id"), "filename", rs.getString("filename"), "path", rs.getString("path"))
-        );
+        List<Map<String, Object>> subfolders = videoMapper.selectRootFolderSubfolders();
+        List<Map<String, Object>> files = videoMapper.selectRootFolderFiles();
         result.put("subfolders", subfolders);
         result.put("files", files);
         return result;
@@ -189,47 +134,20 @@ public class VideosServiceImpl implements VideosService {
             return;
         }
         List<Integer> ids = videos.stream()
-            .map(v -> (Integer) v.get("id"))
+            .map(v -> ((Number) v.get("id")).intValue())
             .toList();
-        String placeholders = ids.stream().map(it -> "?").collect(Collectors.joining(","));
-        String sql = "SELECT vt.video_id, t.id AS tag_id, t.name AS tag_name "
-            + "FROM video_tags vt JOIN tags t ON t.id = vt.tag_id WHERE vt.video_id IN (" + placeholders + ")";
-        List<Map<String, Object>> tagRows = jdbcTemplate.query(sql, (rs, rowNum) -> {
-            Map<String, Object> row = new HashMap<>();
-            row.put("videoId", rs.getInt("video_id"));
-            row.put("id", rs.getInt("tag_id"));
-            row.put("name", rs.getString("tag_name"));
-            return row;
-        }, ids.toArray());
+        List<Map<String, Object>> tagRows = videoMapper.selectTagsForVideoIds(ids);
 
         Map<Integer, List<Map<String, Object>>> grouped = new HashMap<>();
         for (Map<String, Object> row : tagRows) {
-            Integer videoId = (Integer) row.get("videoId");
+            Integer videoId = ((Number) row.get("videoId")).intValue();
             grouped.computeIfAbsent(videoId, it -> new ArrayList<>())
                 .add(Map.of("id", row.get("id"), "name", row.get("name")));
         }
         for (Map<String, Object> video : videos) {
-            Integer id = (Integer) video.get("id");
+            Integer id = ((Number) video.get("id")).intValue();
             video.put("tags", grouped.getOrDefault(id, List.of()));
         }
-    }
-
-    private RowMapper<Map<String, Object>> videoRowMapper() {
-        return (rs, rowNum) -> {
-            Map<String, Object> video = new HashMap<>();
-            video.put("id", rs.getInt("id"));
-            video.put("filename", rs.getString("filename"));
-            video.put("path", rs.getString("path"));
-            video.put("extension", rs.getString("extension"));
-            Object size = rs.getObject("size");
-            video.put("size", size == null ? null : String.valueOf(size));
-            Timestamp createdTime = rs.getTimestamp("created_time");
-            Timestamp modifiedTime = rs.getTimestamp("modified_time");
-            video.put("createdTime", createdTime == null ? null : createdTime.toLocalDateTime());
-            video.put("modifiedTime", modifiedTime == null ? null : modifiedTime.toLocalDateTime());
-            video.put("videoKey", rs.getString("video_key"));
-            return video;
-        };
     }
 
     private String buildOrderBy(String sortBy, String sortOrder) {

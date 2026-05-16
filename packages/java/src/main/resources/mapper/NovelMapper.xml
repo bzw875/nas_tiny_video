@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.videomanager.novels.NovelMapper">
+
+    <select id="selectNovelList" resultType="java.util.HashMap">
+        SELECT id, name, author, wordCount, starRating, readCount
+        FROM novel
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="selectNovelByName" resultType="java.util.HashMap">
+        SELECT id, name, author, wordCount, content, starRating, readCount
+        FROM novel
+        WHERE name = #{name}
+    </select>
+
+    <select id="selectNovelMetaById" resultType="java.util.HashMap">
+        SELECT id, name, author, wordCount, starRating, readCount
+        FROM novel
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectContentSlice" resultType="string">
+        SELECT SUBSTRING(content, #{start}, #{len}) AS content
+        FROM novel
+        WHERE id = #{id}
+        LIMIT 1
+    </select>
+
+    <update id="incrementReadCount">
+        UPDATE novel SET readCount = readCount + 1 WHERE id = #{id}
+    </update>
+
+    <select id="selectStarRatingById" resultType="java.lang.Integer">
+        SELECT starRating FROM novel WHERE id = #{id}
+    </select>
+
+    <update id="updateStarRating">
+        UPDATE novel SET starRating = #{starRating} WHERE id = #{id}
+    </update>
+
+    <select id="countByName" resultType="int">
+        SELECT COUNT(*) FROM novel WHERE name = #{name}
+    </select>
+
+    <insert id="insertNovel">
+        INSERT INTO novel (name, content, author, starRating, wordCount, readCount)
+        VALUES (#{name}, #{content}, #{author}, #{starRating}, #{wordCount}, #{readCount})
+    </insert>
+
+    <delete id="deleteById">
+        DELETE FROM novel WHERE id = #{id}
+    </delete>
+</mapper>

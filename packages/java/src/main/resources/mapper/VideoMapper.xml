@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.videomanager.videos.VideoMapper">
+
+    <sql id="videoColumns">
+        v.id,
+        v.filename,
+        v.path,
+        v.extension,
+        CAST(v.size AS CHAR) AS size,
+        v.created_time AS createdTime,
+        v.modified_time AS modifiedTime,
+        v.video_key AS videoKey
+    </sql>
+
+    <sql id="videoWhere">
+        <where>
+            <if test="pathPrefix != null and pathPrefix != ''">
+                AND v.path LIKE #{pathPrefix}
+            </if>
+            <if test="search != null and search != ''">
+                AND (v.filename LIKE #{search} OR v.path LIKE #{search})
+            </if>
+            <foreach collection="tagIds" item="tagId">
+                AND EXISTS (SELECT 1 FROM video_tags vt WHERE vt.video_id = v.id AND vt.tag_id = #{tagId})
+            </foreach>
+            <if test="extensions != null and extensions.size() &gt; 0">
+                AND v.extension IN
+                <foreach collection="extensions" item="ext" open="(" separator="," close=")">
+                    #{ext}
+                </foreach>
+            </if>
+        </where>
+    </sql>
+
+    <select id="selectVideoPage" resultType="java.util.HashMap">
+        SELECT
+        <include refid="videoColumns"/>
+        FROM videos v
+        <include refid="videoWhere"/>
+        ${orderBySql}
+        LIMIT #{skip}, #{take}
+    </select>
+
+    <select id="countVideos" resultType="long">
+        SELECT COUNT(*)
+        FROM videos v
+        <include refid="videoWhere"/>
+    </select>
+
+    <select id="selectVideoById" resultType="java.util.HashMap">
+        SELECT
+        <include refid="videoColumns"/>
+        FROM videos v
+        WHERE v.id = #{id}
+    </select>
+
+    <delete id="deleteVideoTags">
+        DELETE FROM video_tags WHERE video_id = #{videoId}
+    </delete>
+
+    <insert id="insertVideoTag">
+        INSERT IGNORE INTO video_tags (video_id, tag_id) VALUES (#{videoId}, #{tagId})
+    </insert>
+
+    <select id="selectTagsForVideoIds" resultType="java.util.HashMap">
+        SELECT vt.video_id AS videoId, t.id AS id, t.name AS name
+        FROM video_tags vt
+        JOIN tags t ON t.id = vt.tag_id
+        WHERE vt.video_id IN
+        <foreach collection="ids" item="vid" open="(" separator="," close=")">
+            #{vid}
+        </foreach>
+    </select>
+
+    <select id="selectVideosForFolder" resultType="java.util.HashMap">
+        SELECT id, filename, path
+        FROM videos
+        WHERE path LIKE #{pathPrefix}
+    </select>
+
+    <select id="selectRootFolderSubfolders" resultType="java.util.HashMap">
+        SELECT SUBSTRING_INDEX(TRIM(BOTH '/' FROM path), '/', 1) AS name, COUNT(*) AS videoCount
+        FROM videos
+        WHERE path IS NOT NULL AND LOCATE('/', TRIM(BOTH '/' FROM path)) &gt; 0
+        GROUP BY name
+        HAVING name &lt;&gt; ''
+        ORDER BY name
+    </select>
+
+    <select id="selectRootFolderFiles" resultType="java.util.HashMap">
+        SELECT id, filename, path
+        FROM videos
+        WHERE path IS NOT NULL AND LOCATE('/', TRIM(BOTH '/' FROM path)) = 0
+        ORDER BY id ASC
+    </select>
+</mapper>

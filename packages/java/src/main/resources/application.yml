@@ -6,13 +6,18 @@ spring:
     name: video-manager-api
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:192.168.1.19}:3306/video_manager?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:192.168.1.22}:3306/video_manager?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: root
     password: ${DB_PASSWORD:}
   flyway:
     enabled: ${FLYWAY_ENABLED:false}
   jackson:
     time-zone: Asia/Shanghai
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
 
 management:
   endpoints:
