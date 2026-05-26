@@ -721,10 +721,42 @@ dialog.tag-dialog::backdrop {
 .gallery-pagination {
   display: flex;
   align-items: center;
-  gap: var(--space-md);
+  flex-wrap: wrap;
+  gap: var(--space-sm);
   margin-top: var(--space-xl);
   padding-top: var(--space-md);
   border-top: 1px solid var(--border);
+}
+
+.gallery-page-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.gallery-page-button-group {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.gallery-page-number {
+  min-width: 2rem;
+  padding-inline: var(--space-xs);
+}
+
+.gallery-page-number:disabled.primary {
+  opacity: 1;
+}
+
+.gallery-page-ellipsis {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+}
+
+.gallery-page-total {
+  margin-inline: var(--space-xs);
 }
 
 .gallery-lightbox-backdrop {

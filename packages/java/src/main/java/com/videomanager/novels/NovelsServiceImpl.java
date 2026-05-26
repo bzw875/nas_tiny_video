@@ -1,6 +1,10 @@
 package com.videomanager.novels;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.videomanager.common.CacheKeys;
+import com.videomanager.common.CacheNamespaces;
 import com.videomanager.common.NotFoundException;
+import com.videomanager.common.RedisJsonCache;
 import com.videomanager.config.AppProperties;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -11,6 +15,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
@@ -18,56 +23,65 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class NovelsServiceImpl implements NovelsService {
+
     private static final int NOVEL_PAGE_SIZE = 5000;
+    private static final TypeReference<List<Map<String, Object>>> NOVEL_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> NOVEL_MAP_TYPE = new TypeReference<>() {};
+
     private final NovelMapper novelMapper;
     private final AppProperties appProperties;
+    private final RedisJsonCache redisJsonCache;
 
-    public NovelsServiceImpl(NovelMapper novelMapper, AppProperties appProperties) {
+    public NovelsServiceImpl(
+        NovelMapper novelMapper,
+        AppProperties appProperties,
+        RedisJsonCache redisJsonCache
+    ) {
         this.novelMapper = novelMapper;
         this.appProperties = appProperties;
+        this.redisJsonCache = redisJsonCache;
     }
 
     @Override
     public Object getNovelsLimit(int page, int limit) {
         int safePage = Math.max(page, 1);
         int safeLimit = Math.max(limit, 1);
-        return novelMapper.selectNovelList(safeLimit, (safePage - 1) * safeLimit);
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.NOVELS,
+            CacheKeys.parts("list", safePage, safeLimit),
+            NOVEL_LIST_TYPE,
+            appProperties.cacheTtl(),
+            () -> novelMapper.selectNovelList(safeLimit, (safePage - 1) * safeLimit)
+        );
     }
 
     @Override
     public Object getNovelByName(String name) {
         String decoded = URLDecoder.decode(name, StandardCharsets.UTF_8);
-        return novelMapper.selectNovelByName(decoded).stream()
-            .findFirst()
-            .orElseThrow(() -> new NotFoundException("Novel not found"));
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.NOVELS,
+            CacheKeys.parts("byName", decoded),
+            NOVEL_MAP_TYPE,
+            appProperties.cacheTtl(),
+            () -> novelMapper.selectNovelByName(decoded).stream()
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("Novel not found"))
+        );
     }
 
     @Override
     @Transactional
     public Object getNovelPage(int id, Integer page) {
         int pageNum = Math.max((page == null ? 1 : page) - 1, 0);
-        int start = pageNum * NOVEL_PAGE_SIZE + 1;
-        Map<String, Object> novel = novelMapper.selectNovelMetaById(id);
-        if (novel == null || novel.isEmpty()) {
-            throw new NotFoundException("Novel not found");
-        }
-
-        String content = novelMapper.selectContentSlice(id, start, NOVEL_PAGE_SIZE);
-        if (content == null) {
-            content = "";
-        }
-
-        novelMapper.incrementReadCount(id);
-        return Map.of(
-            "id", novel.get("id"),
-            "name", novel.get("name"),
-            "author", novel.get("author"),
-            "wordCount", novel.get("wordCount"),
-            "starRating", novel.get("starRating"),
-            "readCount", novel.get("readCount"),
-            "content", content,
-            "pageSize", NOVEL_PAGE_SIZE
+        Object cached = redisJsonCache.getOrLoad(
+            CacheNamespaces.NOVELS,
+            CacheKeys.parts("page", id, pageNum),
+            NOVEL_MAP_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadNovelPage(id, pageNum)
         );
+        novelMapper.incrementReadCount(id);
+        return cached;
     }
 
     @Override
@@ -78,6 +92,7 @@ public class NovelsServiceImpl implements NovelsService {
         }
         int next = starRating == null ? current : starRating;
         int affected = novelMapper.updateStarRating(id, next);
+        redisJsonCache.invalidateNamespace(CacheNamespaces.NOVELS);
         return Map.of("affected", affected, "raw", java.util.List.of());
     }
 
@@ -121,6 +136,9 @@ public class NovelsServiceImpl implements NovelsService {
                         // ignore bad files during scan
                     }
                 });
+            if (!imported.isEmpty()) {
+                redisJsonCache.invalidateNamespace(CacheNamespaces.NOVELS);
+            }
             return imported;
         } catch (IOException ex) {
             return java.util.List.of();
@@ -131,10 +149,37 @@ public class NovelsServiceImpl implements NovelsService {
     public Map<String, Object> deleteNovel(int id) {
         try {
             int affected = novelMapper.deleteById(id);
+            if (affected > 0) {
+                redisJsonCache.invalidateNamespace(CacheNamespaces.NOVELS);
+            }
             return Map.of("affected", affected, "raw", java.util.List.of());
         } catch (Exception ex) {
             return Map.of("affected", 0, "raw", java.util.List.of());
         }
+    }
+
+    private Map<String, Object> loadNovelPage(int id, int pageNum) {
+        int start = pageNum * NOVEL_PAGE_SIZE + 1;
+        Map<String, Object> novel = novelMapper.selectNovelMetaById(id);
+        if (novel == null || novel.isEmpty()) {
+            throw new NotFoundException("Novel not found");
+        }
+
+        String content = novelMapper.selectContentSlice(id, start, NOVEL_PAGE_SIZE);
+        if (content == null) {
+            content = "";
+        }
+
+        return Map.of(
+            "id", novel.get("id"),
+            "name", novel.get("name"),
+            "author", novel.get("author"),
+            "wordCount", novel.get("wordCount"),
+            "starRating", novel.get("starRating"),
+            "readCount", novel.get("readCount"),
+            "content", content,
+            "pageSize", NOVEL_PAGE_SIZE
+        );
     }
 
     private String decodeText(byte[] bytes) {

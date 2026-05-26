@@ -1,7 +1,12 @@
 package com.videomanager.aish123;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.videomanager.aish123.dto.QueryAish123Dto;
+import com.videomanager.common.CacheKeys;
+import com.videomanager.common.CacheNamespaces;
 import com.videomanager.common.NotFoundException;
+import com.videomanager.common.RedisJsonCache;
+import com.videomanager.config.AppProperties;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -16,15 +21,67 @@ public class Aish123ServiceImpl implements Aish123Service {
     private static final List<String> TIMESTAMP_KEYS = List.of(
         "created_at", "last_reply_at", "first_seen_at", "updated_at"
     );
+    private static final TypeReference<Map<String, Object>> PAGE_TYPE = new TypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> ROW_TYPE = new TypeReference<>() {};
 
     private final Aish123Mapper aish123Mapper;
+    private final RedisJsonCache redisJsonCache;
+    private final AppProperties appProperties;
 
-    public Aish123ServiceImpl(Aish123Mapper aish123Mapper) {
+    public Aish123ServiceImpl(
+        Aish123Mapper aish123Mapper,
+        RedisJsonCache redisJsonCache,
+        AppProperties appProperties
+    ) {
         this.aish123Mapper = aish123Mapper;
+        this.redisJsonCache = redisJsonCache;
+        this.appProperties = appProperties;
     }
 
     @Override
     public Map<String, Object> findAll(QueryAish123Dto dto) {
+        String keyPart = CacheKeys.parts(
+            "list",
+            dto.skip(),
+            dto.take(),
+            dto.fid(),
+            dto.typeName(),
+            dto.search(),
+            dto.sortBy(),
+            dto.sortOrder()
+        );
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.AISH123,
+            keyPart,
+            PAGE_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadPage(dto)
+        );
+    }
+
+    @Override
+    public Map<String, Object> countByTypeName() {
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.AISH123,
+            "stats:by-type",
+            PAGE_TYPE,
+            appProperties.cacheTtl(),
+            this::loadCountByTypeName
+        );
+    }
+
+    @Override
+    public Map<String, Object> findOne(int tid) {
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.AISH123,
+            CacheKeys.parts("one", tid),
+            ROW_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadOne(tid)
+        );
+    }
+
+    private Map<String, Object> loadPage(QueryAish123Dto dto) {
         int skip = dto.skip() == null ? 0 : Math.max(dto.skip(), 0);
         int take = dto.take() == null ? 50 : Math.min(Math.max(dto.take(), 1), 200);
 
@@ -61,8 +118,7 @@ public class Aish123ServiceImpl implements Aish123Service {
         return result;
     }
 
-    @Override
-    public Map<String, Object> countByTypeName() {
+    private Map<String, Object> loadCountByTypeName() {
         Long total = aish123Mapper.countAll();
         List<Map<String, Object>> raw = aish123Mapper.selectCountByTypeName();
         List<Map<String, Object>> items = new ArrayList<>();
@@ -79,8 +135,7 @@ public class Aish123ServiceImpl implements Aish123Service {
         return result;
     }
 
-    @Override
-    public Map<String, Object> findOne(int tid) {
+    private Map<String, Object> loadOne(int tid) {
         Map<String, Object> row = aish123Mapper.selectByTid(tid);
         if (row == null || row.isEmpty()) {
             throw new NotFoundException("aish123 thread " + tid + " not found");

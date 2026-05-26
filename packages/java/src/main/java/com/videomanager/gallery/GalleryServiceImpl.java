@@ -2,13 +2,18 @@ package com.videomanager.gallery;
 
 import com.videomanager.common.BadRequestException;
 import com.videomanager.common.NotFoundException;
+import com.videomanager.common.CacheNamespaces;
+import com.videomanager.common.RedisJsonCache;
 import com.videomanager.config.AppProperties;
 import com.videomanager.gallery.dto.GalleryItemDto;
 import com.videomanager.gallery.dto.QueryGalleryDto;
+import com.fasterxml.jackson.core.type.TypeReference;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -25,35 +30,20 @@ public class GalleryServiceImpl implements GalleryService {
         ".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp",
         ".tif", ".tiff", ".heic", ".svg", ".avif", ".jxl"
     );
+    private static final TypeReference<List<GalleryItemDto>> INDEX_TYPE = new TypeReference<>() {};
 
     private final AppProperties appProperties;
+    private final RedisJsonCache redisJsonCache;
 
-    public GalleryServiceImpl(AppProperties appProperties) {
+    public GalleryServiceImpl(AppProperties appProperties, RedisJsonCache redisJsonCache) {
         this.appProperties = appProperties;
+        this.redisJsonCache = redisJsonCache;
     }
 
     @Override
     public Map<String, Object> list(QueryGalleryDto dto) {
         Path root = galleryRoot();
-
-        List<GalleryItemDto> collected = new ArrayList<>();
-        try (Stream<Path> stream = Files.list(root)) {
-            stream.filter(Files::isRegularFile).forEach(p -> {
-                if (!isAllowedImage(p)) {
-                    return;
-                }
-                String filename = p.getFileName().toString();
-                try {
-                    long size = Files.size(p);
-                    long mtime = Files.getLastModifiedTime(p).toMillis();
-                    collected.add(new GalleryItemDto(filename, size, mtime));
-                } catch (IOException ignored) {
-                    /* skip unreadable */
-                }
-            });
-        } catch (IOException ex) {
-            throw new BadRequestException("Cannot read gallery directory: " + ex.getMessage());
-        }
+        List<GalleryItemDto> collected = loadIndex(root);
 
         String sortBy = normalizeSortBy(dto.sortBy());
         String sortOrder = normalizeSortOrder(dto.sortOrder(), sortBy);
@@ -113,6 +103,40 @@ public class GalleryServiceImpl implements GalleryService {
             throw new NotFoundException("Image not found");
         }
         return file;
+    }
+
+    private List<GalleryItemDto> loadIndex(Path root) {
+        String keyPart = "index:" + Base64.getUrlEncoder().withoutPadding()
+            .encodeToString(root.toString().getBytes(StandardCharsets.UTF_8));
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.GALLERY,
+            keyPart,
+            INDEX_TYPE,
+            appProperties.cacheTtl(),
+            () -> scanDirectory(root)
+        );
+    }
+
+    private List<GalleryItemDto> scanDirectory(Path root) {
+        List<GalleryItemDto> collected = new ArrayList<>();
+        try (Stream<Path> stream = Files.list(root)) {
+            stream.filter(Files::isRegularFile).forEach(p -> {
+                if (!isAllowedImage(p)) {
+                    return;
+                }
+                String filename = p.getFileName().toString();
+                try {
+                    long size = Files.size(p);
+                    long mtime = Files.getLastModifiedTime(p).toMillis();
+                    collected.add(new GalleryItemDto(filename, size, mtime));
+                } catch (IOException ignored) {
+                    /* skip unreadable */
+                }
+            });
+        } catch (IOException ex) {
+            throw new BadRequestException("Cannot read gallery directory: " + ex.getMessage());
+        }
+        return collected;
     }
 
     private Path galleryRoot() {

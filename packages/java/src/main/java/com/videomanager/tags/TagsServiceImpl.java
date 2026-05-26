@@ -1,6 +1,11 @@
 package com.videomanager.tags;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.videomanager.common.CacheKeys;
+import com.videomanager.common.CacheNamespaces;
 import com.videomanager.common.NotFoundException;
+import com.videomanager.common.RedisJsonCache;
+import com.videomanager.config.AppProperties;
 import com.videomanager.tags.dto.CreateTagDto;
 import com.videomanager.tags.dto.TagDto;
 import com.videomanager.tags.dto.UpdateTagDto;
@@ -11,24 +16,44 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class TagsServiceImpl implements TagsService {
-    private final TagsMapper tagsMapper;
 
-    public TagsServiceImpl(TagsMapper tagsMapper) {
+    private static final TypeReference<List<TagDto>> TAG_LIST_TYPE = new TypeReference<>() {};
+    private static final TypeReference<TagDto> TAG_TYPE = new TypeReference<>() {};
+
+    private final TagsMapper tagsMapper;
+    private final RedisJsonCache redisJsonCache;
+    private final AppProperties appProperties;
+
+    public TagsServiceImpl(
+        TagsMapper tagsMapper,
+        RedisJsonCache redisJsonCache,
+        AppProperties appProperties
+    ) {
         this.tagsMapper = tagsMapper;
+        this.redisJsonCache = redisJsonCache;
+        this.appProperties = appProperties;
     }
 
     @Override
     public List<TagDto> findAll() {
-        return tagsMapper.findAll();
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.TAGS,
+            "all",
+            TAG_LIST_TYPE,
+            appProperties.cacheTtl(),
+            tagsMapper::findAll
+        );
     }
 
     @Override
     public TagDto findOne(int id) {
-        List<TagDto> tags = tagsMapper.findById(id);
-        if (tags.isEmpty()) {
-            throw new NotFoundException("Tag " + id + " not found");
-        }
-        return tags.get(0);
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.TAGS,
+            CacheKeys.parts("one", id),
+            TAG_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadOne(id)
+        );
     }
 
     @Override
@@ -50,12 +75,13 @@ public class TagsServiceImpl implements TagsService {
         if (id == null) {
             throw new IllegalStateException("Failed to resolve created tag id");
         }
-        return findOne(id);
+        invalidateTagsAndVideos();
+        return loadOne(id);
     }
 
     @Override
     public TagDto update(int id, UpdateTagDto dto) {
-        TagDto current = findOne(id);
+        TagDto current = loadOne(id);
         String name = dto.name() == null ? current.name() : dto.name().trim();
         String description = current.description();
         if (dto.description() != null) {
@@ -67,13 +93,28 @@ public class TagsServiceImpl implements TagsService {
         } catch (DuplicateKeyException ex) {
             throw new DuplicateKeyException("Tag name already exists");
         }
-        return findOne(id);
+        invalidateTagsAndVideos();
+        return loadOne(id);
     }
 
     @Override
     public Object remove(int id) {
-        findOne(id);
+        loadOne(id);
         tagsMapper.deleteById(id);
+        invalidateTagsAndVideos();
         return Map.of("ok", true);
+    }
+
+    private TagDto loadOne(int id) {
+        List<TagDto> tags = tagsMapper.findById(id);
+        if (tags.isEmpty()) {
+            throw new NotFoundException("Tag " + id + " not found");
+        }
+        return tags.get(0);
+    }
+
+    private void invalidateTagsAndVideos() {
+        redisJsonCache.invalidateNamespace(CacheNamespaces.TAGS);
+        redisJsonCache.invalidateNamespace(CacheNamespaces.VIDEOS);
     }
 }

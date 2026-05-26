@@ -4,12 +4,25 @@ import { galleryFileUrl, listGallery, type GalleryItem } from '../api/gallery';
 import { formatSize } from '../lib/format';
 
 const PAGE_SIZE = 48;
+const PAGE_WINDOW = 5;
 
 const GALLERY_SORT_FIELDS = ['filename', 'modifiedTime', 'size'] as const;
 type GallerySortField = (typeof GALLERY_SORT_FIELDS)[number];
 
 function isSortField(s: string): s is GallerySortField {
   return (GALLERY_SORT_FIELDS as readonly string[]).includes(s);
+}
+
+function getVisiblePages(currentPage: number, totalPages: number): number[] {
+  const pages = new Set<number>([0, totalPages - 1]);
+  const firstNearbyPage = Math.max(0, currentPage - PAGE_WINDOW);
+  const lastNearbyPage = Math.min(totalPages - 1, currentPage + PAGE_WINDOW);
+
+  for (let p = firstNearbyPage; p <= lastNearbyPage; p += 1) {
+    pages.add(p);
+  }
+
+  return [...pages].sort((a, b) => a - b);
 }
 
 const DEFAULT_FIRST_ORDER: Record<GallerySortField, 'asc' | 'desc'> = {
@@ -63,18 +76,49 @@ export function GalleryPage() {
     load();
   }, [load]);
 
+  const showPrevImage = useCallback(() => {
+    setLightbox((current) => {
+      if (!current) return current;
+      const idx = items.findIndex((it) => it.filename === current);
+      if (idx <= 0) return current;
+      return items[idx - 1].filename;
+    });
+  }, [items]);
+
+  const showNextImage = useCallback(() => {
+    setLightbox((current) => {
+      if (!current) return current;
+      const idx = items.findIndex((it) => it.filename === current);
+      if (idx < 0 || idx >= items.length - 1) return current;
+      return items[idx + 1].filename;
+    });
+  }, [items]);
+
   useEffect(() => {
     if (!lightbox) return;
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setLightbox(null);
+      if (e.key === 'Escape') {
+        setLightbox(null);
+        return;
+      }
+      if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        showPrevImage();
+        return;
+      }
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        showNextImage();
+      }
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [lightbox]);
+  }, [lightbox, showNextImage, showPrevImage]);
 
   function goPage(p: number) {
     const next = new URLSearchParams(searchParams);
-    next.set('page', String(p));
+    const target = Math.min(Math.max(0, p), totalPages - 1);
+    next.set('page', String(target));
     setSearchParams(next);
   }
 
@@ -102,6 +146,7 @@ export function GalleryPage() {
   }
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const visiblePages = getVisiblePages(page, totalPages);
 
   return (
     <div>
@@ -178,9 +223,33 @@ export function GalleryPage() {
           >
             上一页
           </button>
-          <span className="muted">
-            {page + 1} / {totalPages}
-          </span>
+          <div
+            className="gallery-page-buttons"
+            aria-label={`页码选择，当前第 ${page + 1} 页，共 ${totalPages} 页`}
+          >
+            {visiblePages.map((p, idx) => {
+              const previousPage = visiblePages[idx - 1];
+              const hasGap = previousPage !== undefined && p - previousPage > 1;
+              return (
+                <span key={p} className="gallery-page-button-group">
+                  {hasGap && <span className="gallery-page-ellipsis">…</span>}
+                  <button
+                    type="button"
+                    className={`small-btn gallery-page-number${
+                      p === page ? ' primary' : ''
+                    }`}
+                    disabled={p === page}
+                    onClick={() => goPage(p)}
+                    aria-current={p === page ? 'page' : undefined}
+                    aria-label={`第 ${p + 1} 页`}
+                  >
+                    {p + 1}
+                  </button>
+                </span>
+              );
+            })}
+          </div>
+          <span className="muted gallery-page-total">共 {totalPages} 页</span>
           <button
             type="button"
             className="small-btn"

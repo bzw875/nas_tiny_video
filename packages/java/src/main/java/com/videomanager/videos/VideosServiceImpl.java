@@ -1,6 +1,11 @@
 package com.videomanager.videos;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.videomanager.common.CacheKeys;
+import com.videomanager.common.CacheNamespaces;
 import com.videomanager.common.NotFoundException;
+import com.videomanager.common.RedisJsonCache;
+import com.videomanager.config.AppProperties;
 import com.videomanager.videos.dto.QueryVideosDto;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,21 +18,89 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class VideosServiceImpl implements VideosService {
+
     private static final Set<String> ALLOWED_VIDEO_EXTENSIONS = Set.of(
         ".mp4", ".avi", ".mkv", ".mov", ".flv", ".wmv", ".webm", ".m4v", ".3gp",
         ".ogv", ".ts", ".m2ts", ".mts", ".vob", ".f4v", ".asf", ".rm", ".rmvb",
         ".divx", ".dv", ".m2v", ".mxf", ".ogg", ".qt", ".yuv", ".y4m", ".h264",
         ".h265", ".hevc"
     );
+    private static final TypeReference<Map<String, Object>> PAGE_TYPE = new TypeReference<>() {};
+    private static final TypeReference<Map<String, Object>> VIDEO_TYPE = new TypeReference<>() {};
 
     private final VideoMapper videoMapper;
+    private final RedisJsonCache redisJsonCache;
+    private final AppProperties appProperties;
 
-    public VideosServiceImpl(VideoMapper videoMapper) {
+    public VideosServiceImpl(
+        VideoMapper videoMapper,
+        RedisJsonCache redisJsonCache,
+        AppProperties appProperties
+    ) {
         this.videoMapper = videoMapper;
+        this.redisJsonCache = redisJsonCache;
+        this.appProperties = appProperties;
     }
 
     @Override
     public Map<String, Object> findAll(QueryVideosDto dto) {
+        String keyPart = CacheKeys.parts(
+            "list",
+            dto.skip(),
+            dto.take(),
+            dto.tagIds(),
+            dto.pathPrefix(),
+            dto.search(),
+            dto.sortBy(),
+            dto.sortOrder(),
+            dto.extensions()
+        );
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.VIDEOS,
+            keyPart,
+            PAGE_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadPage(dto)
+        );
+    }
+
+    @Override
+    public Map<String, Object> findOne(int id) {
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.VIDEOS,
+            CacheKeys.parts("one", id),
+            VIDEO_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadOne(id)
+        );
+    }
+
+    @Override
+    @Transactional
+    public Map<String, Object> updateTags(int id, List<Integer> tagIds) {
+        loadOne(id);
+        videoMapper.deleteVideoTags(id);
+        List<Integer> normalized = tagIds == null ? List.of() : tagIds.stream().filter(it -> it != null).distinct().toList();
+        for (Integer tagId : normalized) {
+            videoMapper.insertVideoTag(id, tagId);
+        }
+        redisJsonCache.invalidateNamespace(CacheNamespaces.VIDEOS);
+        return loadOne(id);
+    }
+
+    @Override
+    public Map<String, Object> getFolderListing(String parent) {
+        String parentValue = parent == null ? "" : parent;
+        return redisJsonCache.getOrLoad(
+            CacheNamespaces.VIDEOS,
+            CacheKeys.parts("folders", parentValue),
+            PAGE_TYPE,
+            appProperties.cacheTtl(),
+            () -> loadFolderListing(parentValue)
+        );
+    }
+
+    private Map<String, Object> loadPage(QueryVideosDto dto) {
         int skip = dto.skip() == null ? 0 : Math.max(dto.skip(), 0);
         int take = dto.take() == null ? 50 : Math.min(Math.max(dto.take(), 1), 200);
         List<Integer> tagIds = parseTagIds(dto.tagIds());
@@ -57,8 +130,7 @@ public class VideosServiceImpl implements VideosService {
         return result;
     }
 
-    @Override
-    public Map<String, Object> findOne(int id) {
+    private Map<String, Object> loadOne(int id) {
         Map<String, Object> video = videoMapper.selectVideoById(id);
         if (video == null || video.isEmpty()) {
             throw new NotFoundException("Video " + id + " not found");
@@ -67,23 +139,10 @@ public class VideosServiceImpl implements VideosService {
         return video;
     }
 
-    @Override
-    @Transactional
-    public Map<String, Object> updateTags(int id, List<Integer> tagIds) {
-        findOne(id);
-        videoMapper.deleteVideoTags(id);
-        List<Integer> normalized = tagIds == null ? List.of() : tagIds.stream().filter(it -> it != null).distinct().toList();
-        for (Integer tagId : normalized) {
-            videoMapper.insertVideoTag(id, tagId);
-        }
-        return findOne(id);
-    }
-
-    @Override
-    public Map<String, Object> getFolderListing(String parent) {
+    private Map<String, Object> loadFolderListing(String parent) {
         String normalizedParent = normalizeParentPrefix(parent);
         Map<String, Object> result = new HashMap<>();
-        result.put("parent", parent == null ? "" : parent);
+        result.put("parent", parent);
 
         if (!normalizedParent.isEmpty()) {
             List<Map<String, Object>> rows = videoMapper.selectVideosForFolder(normalizedParent + "%");

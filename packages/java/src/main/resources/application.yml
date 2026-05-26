@@ -13,6 +13,12 @@ spring:
     enabled: ${FLYWAY_ENABLED:false}
   jackson:
     time-zone: Asia/Shanghai
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.22}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:8872goob}
+      timeout: 3s
 
 mybatis:
   mapper-locations: classpath:mapper/**/*.xml
@@ -28,4 +34,5 @@ management:
 app:
   cors-origin: ${CORS_ORIGIN:}
   novel-txt-dir: ${NOVEL_TXT_DIR:./txt}
-  gallery-dir: ${GALLERY_DIR:/Users/mac/Pictures/无聊图}
+  gallery-dir: ${GALLERY_DIR:/home/banzhaowu/Pictures}
+  cache-ttl-seconds: ${CACHE_TTL_SECONDS:300}
