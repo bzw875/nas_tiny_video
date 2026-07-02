@@ -6,6 +6,7 @@ import { GalleryPage } from './pages/GalleryPage';
 import { NovelHome } from './pages/NovelHome';
 import { NovelReader } from './pages/NovelReader';
 import { TagsPage } from './pages/TagsPage';
+import { EbooksPage } from './pages/EbooksPage';
 import { VideosPage } from './pages/VideosPage';
 
 export default function App() {
@@ -19,6 +20,7 @@ export default function App() {
         <Route path="/gallery" element={<GalleryPage />} />
         <Route path="/folders" element={<FoldersPage />} />
         <Route path="/tags" element={<TagsPage />} />
+        <Route path="/ebooks" element={<EbooksPage />} />
         <Route path="/aish123" element={<Aish123Home />} />
         <Route path="*" element={<Navigate to="/novels" replace />} />
       </Route>

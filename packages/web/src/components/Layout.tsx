@@ -23,6 +23,9 @@ export function Layout() {
           <NavLink to="/tags" className={({ isActive }) => (isActive ? 'active' : '')}>
             标签
           </NavLink>
+          <NavLink to="/ebooks" className={({ isActive }) => (isActive ? 'active' : '')}>
+            电子书
+          </NavLink>
           <NavLink to="/aish123" className={({ isActive }) => (isActive ? 'active' : '')}>
             aish123
           </NavLink>

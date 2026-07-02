@@ -46,3 +46,21 @@ export type NovelPageResponse = NovelListItem & {
   content: string;
   pageSize: number;
 };
+
+export type Ebook = {
+  id: number;
+  title: string;
+  author: string;
+  filePath: string;
+  format: string;
+  sizeBytes: number;
+  createdAt: string;
+  modifiedAt: string;
+};
+
+export type EbookListResponse = {
+  items: Ebook[];
+  total: number;
+  skip: number;
+  take: number;
+};
