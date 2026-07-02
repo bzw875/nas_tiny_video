@@ -6,7 +6,7 @@ spring:
     name: video-manager-api
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:192.168.1.22}:3306/video_manager?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:192.168.1.20}:3306/video_manager?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: root
     password: ${DB_PASSWORD:}
   flyway:
@@ -15,7 +15,7 @@ spring:
     time-zone: Asia/Shanghai
   data:
     redis:
-      host: ${REDIS_HOST:192.168.1.22}
+      host: ${REDIS_HOST:192.168.1.20}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:8872goob}
       timeout: 3s
