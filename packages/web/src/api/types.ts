@@ -54,6 +54,8 @@ export type Ebook = {
   filePath: string;
   format: string;
   sizeBytes: number;
+  category: string | null;
+  tags: string | null;
   createdAt: string;
   modifiedAt: string;
 };

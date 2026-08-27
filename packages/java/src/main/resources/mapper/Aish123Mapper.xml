@@ -8,27 +8,27 @@
         a.fid,
         a.title,
         a.url,
-        a.type_name,
-        a.is_sticky,
-        a.is_digest,
-        a.is_locked,
-        a.has_attachment,
-        a.has_image,
+        a.type_name AS typeName,
+        a.is_sticky AS isSticky,
+        a.is_digest AS isDigest,
+        a.is_locked AS isLocked,
+        a.has_attachment AS hasAttachment,
+        a.has_image AS hasImage,
         a.price,
-        a.author_uid,
-        a.author_name,
-        a.author_url,
-        a.created_at,
-        a.reply_count,
-        a.view_count,
-        a.last_reply_uid,
-        a.last_reply_name,
-        a.last_reply_at,
+        a.author_uid AS authorUid,
+        a.author_name AS authorName,
+        a.author_url AS authorUrl,
+        a.created_at AS createdAt,
+        a.reply_count AS replyCount,
+        a.view_count AS viewCount,
+        a.last_reply_uid AS lastReplyUid,
+        a.last_reply_name AS lastReplyName,
+        a.last_reply_at AS lastReplyAt,
         a.rating,
-        a.page_index,
-        a.raw_row_html,
-        a.first_seen_at,
-        a.updated_at
+        a.page_index AS pageIndex,
+        a.raw_row_html AS rawRowHtml,
+        a.first_seen_at AS firstSeenAt,
+        a.updated_at AS updatedAt
     </sql>
 
     <sql id="aish123Where">
@@ -70,7 +70,7 @@
     </select>
 
     <select id="selectCountByTypeName" resultType="java.util.HashMap">
-        SELECT a.type_name, COUNT(*) AS cnt
+        SELECT a.type_name AS typeName, COUNT(*) AS cnt
         FROM `aish123` a
         GROUP BY a.type_name
         ORDER BY cnt DESC, a.type_name ASC

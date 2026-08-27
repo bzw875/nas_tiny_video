@@ -792,7 +792,7 @@ dialog.tag-dialog::backdrop {
 
 .gallery-lightbox-inner img {
   max-width: 100%;
-  max-height: min(78vh, 800px);
+  max-height: min(97vh, 900px);
   width: auto;
   height: auto;
   object-fit: contain;

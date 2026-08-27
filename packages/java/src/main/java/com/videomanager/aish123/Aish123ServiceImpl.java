@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 public class Aish123ServiceImpl implements Aish123Service {
 
     private static final List<String> TIMESTAMP_KEYS = List.of(
-        "created_at", "last_reply_at", "first_seen_at", "updated_at"
+        "createdAt", "lastReplyAt", "firstSeenAt", "updatedAt"
     );
     private static final TypeReference<Map<String, Object>> PAGE_TYPE = new TypeReference<>() {};
     private static final TypeReference<Map<String, Object>> ROW_TYPE = new TypeReference<>() {};
@@ -124,7 +124,7 @@ public class Aish123ServiceImpl implements Aish123Service {
         List<Map<String, Object>> items = new ArrayList<>();
         for (Map<String, Object> row : raw) {
             Map<String, Object> mapped = new HashMap<>();
-            mapped.put("type_name", row.get("type_name"));
+            mapped.put("typeName", row.get("typeName"));
             Object cnt = row.get("cnt");
             mapped.put("count", cnt instanceof Number n ? n.longValue() : cnt);
             items.add(mapped);

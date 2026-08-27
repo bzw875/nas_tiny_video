@@ -19,9 +19,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class EbooksServiceImpl implements EbooksService {
 
-    private static final List<String> TIMESTAMP_KEYS = List.of("created_at", "modified_at");
+    private static final List<String> TIMESTAMP_KEYS = List.of("createdAt", "modifiedAt");
     private static final TypeReference<Map<String, Object>> PAGE_TYPE = new TypeReference<>() {};
     private static final TypeReference<Map<String, Object>> ROW_TYPE = new TypeReference<>() {};
+
+    /**
+     * Auto-categorization rules: file path prefix → (category, tags).
+     * When an ebook's category is empty, the first matching prefix wins.
+     */
+    private static final List<AutoCategoryRule> AUTO_CATEGORY_RULES = List.of(
+        new AutoCategoryRule("/自学考试/", "历史", "历史,教材")
+    );
+
+    private record AutoCategoryRule(String pathPrefix, String category, String tags) {
+    }
 
     private final EbookMapper ebookMapper;
     private final RedisJsonCache redisJsonCache;
@@ -154,6 +165,24 @@ public class EbooksServiceImpl implements EbooksService {
                 row.put(key, ts.toInstant());
             }
         }
+        applyAutoCategory(row);
+    }
+
+    private void applyAutoCategory(Map<String, Object> row) {
+        Object cat = row.get("category");
+        if (cat != null && !cat.toString().isBlank()) {
+            return; // already categorized, skip auto
+        }
+        Object fp = row.get("filePath");
+        if (fp == null) return;
+        String filePath = fp.toString();
+        for (AutoCategoryRule rule : AUTO_CATEGORY_RULES) {
+            if (filePath.startsWith(rule.pathPrefix())) {
+                row.put("category", rule.category());
+                row.put("tags", rule.tags());
+                return;
+            }
+        }
     }
 
     private String buildOrderBy(String sortBy, String sortOrder) {
@@ -166,6 +195,8 @@ public class EbooksServiceImpl implements EbooksService {
             Map.entry("file_path", "e.file_path"),
             Map.entry("format", "e.format"),
             Map.entry("size_bytes", "e.size_bytes"),
+            Map.entry("category", "e.category"),
+            Map.entry("tags", "e.tags"),
             Map.entry("created_at", "e.created_at"),
             Map.entry("modified_at", "e.modified_at")
         );

@@ -7,11 +7,13 @@
         e.id,
         e.title,
         e.author,
-        e.file_path,
+        e.file_path AS filePath,
         e.format,
-        e.size_bytes,
-        e.created_at,
-        e.modified_at
+        e.size_bytes AS sizeBytes,
+        e.category,
+        e.tags,
+        e.created_at AS createdAt,
+        e.modified_at AS modifiedAt
     </sql>
 
     <sql id="ebookWhere">

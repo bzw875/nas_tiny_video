@@ -20,7 +20,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "..", "..");
 const distDir = path.join(__dirname, "dist");
 
-const host = '192.168.1.22';
+const host = '192.168.1.20';
 const user = "root";
 const remotePath = '/var/www/html';
 const password = process.env.DEPLOY_PASSWORD;

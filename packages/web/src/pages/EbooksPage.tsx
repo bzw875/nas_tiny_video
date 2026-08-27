@@ -20,6 +20,8 @@ const EBOOK_SORT_FIELDS = [
   'file_path',
   'format',
   'size_bytes',
+  'category',
+  'tags',
   'created_at',
   'modified_at',
 ] as const;
@@ -37,6 +39,8 @@ const DEFAULT_FIRST_ORDER: Record<EbookSortField, 'asc' | 'desc'> = {
   file_path: 'asc',
   format: 'asc',
   size_bytes: 'desc',
+  category: 'asc',
+  tags: 'asc',
   created_at: 'desc',
   modified_at: 'desc',
 };
@@ -48,6 +52,8 @@ const FIELD_LABELS: Record<EbookSortField, string> = {
   file_path: '文件路径',
   format: '格式',
   size_bytes: '大小',
+  category: '分类',
+  tags: '标签',
   created_at: '创建时间',
   modified_at: '修改时间',
 };
@@ -188,6 +194,8 @@ export function EbooksPage() {
       filePath: '',
       format: '',
       sizeBytes: 0,
+      category: null,
+      tags: null,
       createdAt: '',
       modifiedAt: '',
     });
@@ -257,6 +265,8 @@ export function EbooksPage() {
       { field: 'file_path', label: '文件路径', className: 'cell-path' },
       { field: 'format', label: '格式' },
       { field: 'size_bytes', label: '大小' },
+      { field: 'category', label: '分类' },
+      { field: 'tags', label: '标签' },
       { field: 'created_at', label: '创建时间' },
       { field: 'modified_at', label: '修改时间' },
     ],
@@ -336,6 +346,8 @@ export function EbooksPage() {
                   <span className="tag-chip">{ebook.format}</span>
                 </td>
                 <td>{formatSize(String(ebook.sizeBytes))}</td>
+                <td>{ebook.category ?? ''}</td>
+                <td>{ebook.tags ?? ''}</td>
                 <td>{formatDateTime(ebook.createdAt)}</td>
                 <td>{formatDateTime(ebook.modifiedAt)}</td>
                 <td style={{ whiteSpace: 'nowrap' }}>
