@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.videomanager.tasks.TaskMapper">
+    <select id="selectTaskPage" resultType="java.util.HashMap">
+        SELECT
+        <include refid="taskColumns"/>
+        FROM tasks v
+        <include refid="taskWhere"/>
+        ${orderBySql}
+        LIMIT #{skip}, #{take}
+    </select>
+
+    <select id="countTasks" resultType="long">
+    SELECT COUNT(*)
+    <include refid="taskColumns" />
+    FROM tasks v
+    WHERE v.id = #{id}
+    </select>
+</mapper>

@@ -1,0 +1,36 @@
+server:
+  port: ${MEDIA_PORT:4020}
+
+spring:
+  application:
+    name: media-service
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_DISCOVERY_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:192.168.1.20}:${DB_PORT:3306}/${DB_NAME:video_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.20}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      timeout: 3s
+
+mybatis:
+  mapper-locations: classpath:mapper/**/*.xml
+  configuration.map-underscore-to-camel-case: true
+
+management.endpoints.web.exposure.include: health,info
+
+app:
+  auth.jwt-secret: ${JWT_SECRET:dev-only-change-this-jwt-secret-32-bytes}
+  gallery-dir: ${GALLERY_DIR:/home/banzhaowu/Pictures}
+  cache-ttl-seconds: ${CACHE_TTL_SECONDS:300}
+  cors-origin: ""
+  novel-txt-dir: ./txt

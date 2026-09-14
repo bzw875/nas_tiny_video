@@ -1,4 +1,5 @@
 import { NavLink, Outlet } from 'react-router-dom';
+import { logout } from '../api/auth';
 
 export function Layout() {
   return (
@@ -32,6 +33,7 @@ export function Layout() {
           <a href={`${location.protocol}//${location.host}:61208/`} target="_blank" rel="noopener noreferrer">
           glances
           </a>
+          <button className="nav-logout" type="button" onClick={logout}>退出</button>
         </div>
       </nav>
       <Outlet />

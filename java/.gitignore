@@ -55,6 +55,7 @@ target/
 # Environment files
 .env
 .env.*
+!.env.example
 
 # macOS files
 __MACOSX/

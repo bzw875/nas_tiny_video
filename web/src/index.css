@@ -183,6 +183,64 @@ nav.top a.active {
   background: var(--accent-tint-nav);
 }
 
+.nav-logout {
+  padding: var(--space-sm) var(--space-md);
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.login-page {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+}
+
+.login-form {
+  width: min(360px, 100%);
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.login-form h1 {
+  margin: 0 0 var(--space-sm);
+  font-family: var(--font-display);
+  font-size: 2rem;
+  letter-spacing: 0;
+}
+
+.login-form label {
+  display: grid;
+  gap: var(--space-sm);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.login-form input {
+  width: 100%;
+  padding: 0.75rem var(--space-md);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.login-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.login-error {
+  margin: 0;
+  color: var(--danger);
+}
+
 /* ─── Panel ─── */
 .panel {
   border-radius: var(--radius-lg);
@@ -224,6 +282,7 @@ nav.top a.active {
 input[type="search"],
 input[type="text"],
 input[type="email"],
+input[type="password"],
 textarea {
   padding: var(--space-sm) var(--space-md);
   border: 1px solid var(--border);
@@ -238,6 +297,7 @@ textarea {
 input[type="search"]:focus,
 input[type="text"]:focus,
 input[type="email"]:focus,
+input[type="password"]:focus,
 textarea:focus {
   outline: none;
   border-color: var(--accent);

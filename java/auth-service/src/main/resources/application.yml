@@ -1,0 +1,39 @@
+server:
+  port: ${AUTH_PORT:4010}
+
+spring:
+  application:
+    name: auth-service
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_DISCOVERY_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://${DB_HOST:192.168.1.20}:${DB_PORT:3306}/${DB_NAME:video_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:}
+  flyway:
+    enabled: ${FLYWAY_ENABLED:true}
+    baseline-on-migrate: true
+  data:
+    redis:
+      host: ${REDIS_HOST:192.168.1.20}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+
+management.endpoints.web.exposure.include: health,info
+
+app:
+  security:
+    login-enabled: true
+  auth:
+    jwt-secret: ${JWT_SECRET:dev-only-change-this-jwt-secret-32-bytes}
+    token-ttl: ${JWT_TOKEN_TTL:12h}
+  cache-ttl-seconds: 300

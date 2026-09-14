@@ -1,4 +1,34 @@
-export const API_BASE = import.meta.env.VITE_API_BASE ?? '/api';
+function normalizeApiBase(value: string | undefined): string {
+  const base = value?.trim() || '/api';
+  return base.replace(/\/+$/, '');
+}
+
+export const API_BASE = normalizeApiBase(import.meta.env.VITE_API_BASE);
+const TOKEN_KEY = 'video-manager.access-token';
+
+export function getAccessToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export function setAccessToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+
+export function clearAccessToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getAccessToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function handleUnauthorized(res: Response): void {
+  if (res.status === 401 && !location.pathname.startsWith('/login')) {
+    clearAccessToken();
+    location.assign('/login');
+  }
+}
 
 async function parseError(res: Response): Promise<string> {
   const t = await res.text();
@@ -13,7 +43,8 @@ async function parseError(res: Response): Promise<string> {
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await fetch(`${API_BASE}${path}`, { headers: authHeaders() });
+  handleUnauthorized(res);
   if (!res.ok) throw new Error(await parseError(res));
   return res.json() as Promise<T>;
 }
@@ -26,9 +57,11 @@ export async function apiSend<T>(
     ...init,
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders(),
       ...(init.headers ?? {}),
     },
   });
+  handleUnauthorized(res);
   if (!res.ok) throw new Error(await parseError(res));
   if (res.status === 204) return undefined as T;
   const text = await res.text();

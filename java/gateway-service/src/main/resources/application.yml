@@ -1,0 +1,36 @@
+server:
+  port: ${GATEWAY_PORT:4000}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    nacos:
+      discovery:
+        enabled: ${NACOS_DISCOVERY_ENABLED:false}
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:}
+    gateway:
+      routes:
+        - id: auth-service
+          uri: ${AUTH_SERVICE_URI:http://127.0.0.1:4010}
+          predicates:
+            - Path=/api/auth/**
+        - id: media-service
+          uri: ${MEDIA_SERVICE_URI:http://127.0.0.1:4020}
+          predicates:
+            - Path=/api/videos/**,/api/tags/**,/api/gallery/**
+        - id: reading-service
+          uri: ${READING_SERVICE_URI:http://127.0.0.1:4030}
+          predicates:
+            - Path=/api/novels/**,/api/novel/**,/api/novelByName/**,/api/scanning,/api/ebooks/**,/api/aish123/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowed-origin-patterns: ${CORS_ORIGIN:*}
+            allowed-methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowed-headers: '*'
+
+management.endpoints.web.exposure.include: health,info,gateway
+
+app.auth.jwt-secret: ${JWT_SECRET:dev-only-change-this-jwt-secret-32-bytes}
