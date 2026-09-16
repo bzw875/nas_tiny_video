@@ -104,7 +104,7 @@ public class VideosServiceImpl implements VideosService {
         int skip = dto.skip() == null ? 0 : Math.max(dto.skip(), 0);
         int take = dto.take() == null ? 50 : Math.min(Math.max(dto.take(), 1), 200);
         List<Integer> tagIds = parseTagIds(dto.tagIds());
-        List<String> extList = parseExtensionsFilter(dto.extensions());
+        List<String> extensions = parseExtensionsFilter(dto.extensions());
 
         String pathPrefix = null;
         if (dto.pathPrefix() != null && !dto.pathPrefix().isBlank()) {
@@ -116,7 +116,7 @@ public class VideosServiceImpl implements VideosService {
         }
 
         String orderBy = buildOrderBy(dto.sortBy(), dto.sortOrder());
-        VideoPageQuery query = new VideoPageQuery(pathPrefix, search, tagIds, extList, orderBy, skip, take);
+        VideoPageQuery query = new VideoPageQuery(pathPrefix, search, tagIds, extensions, orderBy, skip, take);
 
         List<Map<String, Object>> items = videoMapper.selectVideoPage(query);
         long total = videoMapper.countVideos(query);

@@ -9,8 +9,8 @@ public record VideoPageQuery(
     String pathPrefix,
     String search,
     List<Integer> tagIds,
-    List<String> extList,
-    String orderBy,
+    List<String> extensions,
+    String orderBySql,
     Integer skip,
     Integer take
 ) {
