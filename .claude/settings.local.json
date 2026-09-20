@@ -11,7 +11,15 @@
       "Bash(npm run:*)",
       "Bash(git checkout:*)",
       "Bash(npx ts-node:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(java -version)",
+      "Bash(chmod +x start-server.sh)",
+      "Bash(bash -n start-server.sh)",
+      "Bash(./start-server.sh status *)",
+      "Bash(./start-server.sh stop *)",
+      "Bash(SKIP_BUILD=1 ./start-server.sh start)",
+      "Bash(git check-ignore *)",
+      "Bash(echo \"退出码: $?\")"
     ]
   }
 }

@@ -33,4 +33,4 @@ app:
   novel-txt-dir: ${NOVEL_TXT_DIR:./txt}
   cache-ttl-seconds: ${CACHE_TTL_SECONDS:300}
   cors-origin: ""
-  gallery-dir: ./pictures
+  gallery-dir: ${GALLERY_DIR}

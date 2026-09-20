@@ -3,7 +3,7 @@ package com.videomanager.tasks;
 import java.util.List;
 
 /**
- * Parameters for paginated task listing and count (count ignores orderBySql, skip, take).
+ * Parameters for paginated task listing and count (count ignores orderBy, skip, take).
  */
 public record TaskPageQuery(
     String search,

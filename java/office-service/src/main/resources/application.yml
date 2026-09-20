@@ -1,5 +1,5 @@
 server:
-  port: ${MEDIA_PORT:4020}
+  port: ${OFFICE_PORT:4040}
 
 spring:
   application:
@@ -12,7 +12,7 @@ spring:
         namespace: ${NACOS_NAMESPACE:}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:192.168.1.20}:${DB_PORT:3306}/${DB_NAME:task_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST:192.168.1.20}:${DB_PORT:3306}/${DB_NAME:video_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
   data:

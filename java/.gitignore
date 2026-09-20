@@ -36,6 +36,7 @@ replay_pid*
 out/
 target/
 build/
+run/
 
 # VS Code files
 .vscode/

@@ -25,6 +25,7 @@ public class GatewaySecurityConfig {
             .csrf(ServerHttpSecurity.CsrfSpec::disable)
             .authorizeExchange(auth -> auth
                 .pathMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
+                .pathMatchers(HttpMethod.GET, "/api/gallery/file", "/api/gallery/file/**").permitAll()
                 .pathMatchers("/actuator/health", "/actuator/info").permitAll()
                 .anyExchange().authenticated())
             .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))

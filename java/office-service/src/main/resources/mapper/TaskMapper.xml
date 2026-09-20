@@ -2,19 +2,39 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.videomanager.tasks.TaskMapper">
+    <sql id="taskColumns">
+        v.id,
+        v.title,
+        v.status,
+        v.description,
+        v.created_at,
+        v.updated_at,
+        v.deadline_datetime,
+        v.responese_user_id,
+        v.user_id
+    </sql>
+
+    <sql id="taskWhere">
+        <where>
+            <if test="search != null and search != ''">
+                AND v.search LIKE #{search}
+            </if>
+        </where>
+    </sql>
+
+
+
     <select id="selectTaskPage" resultType="java.util.HashMap">
         SELECT
         <include refid="taskColumns"/>
         FROM tasks v
         <include refid="taskWhere"/>
-        ${orderBySql}
+        ${orderBy}
         LIMIT #{skip}, #{take}
     </select>
 
     <select id="countTasks" resultType="long">
     SELECT COUNT(*)
-    <include refid="taskColumns" />
     FROM tasks v
-    WHERE v.id = #{id}
     </select>
 </mapper>

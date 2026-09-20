@@ -65,7 +65,7 @@ public class TasksServiceImpl implements TasksService {
       serach = "%" + dto.search().trim() + "%";
     }
     String orderBy = buildOrderBy(dto.sortBy(), dto.sortOrder());
-    TaskPageQuery query = new TaskPageQuery(serach, orderBy, null, null);
+    TaskPageQuery query = new TaskPageQuery(serach, orderBy, skip, take);
 
     List<Map<String, Object>> items = taskMapper.selectTaskPage(query);
     long total = taskMapper.countTasks(query);
@@ -81,11 +81,11 @@ public class TasksServiceImpl implements TasksService {
 
   private String buildOrderBy(String sortBy, String sortOrder) {
     String direction = "asc".equalsIgnoreCase(sortOrder) ? "ASC" : "DESC";
-    String field = sortBy == null || sortBy.isBlank() ? "modifiedTime" : sortBy;
+    String field = sortBy == null || sortBy.isBlank() ? "updated_at" : sortBy;
     Map<String, String> columnMap = Map.of(
       "id", "v.id"
     );
-    return " ORDER BY " + columnMap.getOrDefault(field, "v.modified_time") + " " + direction + ", v.id" + direction;
+    return " ORDER BY " + columnMap.getOrDefault(field, "v.updated_at") + " " + direction;
   }
 
 

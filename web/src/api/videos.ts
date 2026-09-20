@@ -22,7 +22,7 @@ export function listVideos(params: {
   if (params.sortOrder) q.set('sortOrder', params.sortOrder);
   if (params.extensions) q.set('extensions', params.extensions);
   const qs = q.toString();
-  return apiGet<VideoListResponse>(`/videos${qs ? `?${qs}` : ''}`);
+  return apiGet<VideoListResponse>(`/tasks${qs ? `?${qs}` : ''}`);
 }
 
 export function getFolderListing(parent: string) {

@@ -24,6 +24,10 @@ spring:
           uri: ${READING_SERVICE_URI:http://127.0.0.1:4030}
           predicates:
             - Path=/api/novels/**,/api/novel/**,/api/novelByName/**,/api/scanning,/api/ebooks/**,/api/aish123/**
+        - id: office-service
+          uri: ${OFFICE_SERVICE_URI:http://127.0.0.1:4040}
+          predicates:
+            - Path=/api/tasks/**
       globalcors:
         cors-configurations:
           '[/**]':
