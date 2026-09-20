@@ -3,21 +3,15 @@ package com.videomanager.tasks;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.videomanager.common.CacheKeys;
 import com.videomanager.common.CacheNamespaces;
-import com.videomanager.common.NotFoundException;
 import com.videomanager.common.RedisJsonCache;
 import com.videomanager.config.AppProperties;
 import com.videomanager.tasks.dto.QueryTasksDto;
 
-import jakarta.validation.constraints.Min;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TasksServiceImpl implements TasksService {

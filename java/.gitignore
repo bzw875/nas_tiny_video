@@ -44,10 +44,8 @@ run/
 # Gradle
 .gradle/
 .m2repo/
-build/
 
 # Maven
-target/
 
 # Others
 *.swp
