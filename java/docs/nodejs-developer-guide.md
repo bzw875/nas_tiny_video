@@ -31,7 +31,7 @@ HTTP 请求
 
 ## 2. 这个工程是什么
 
-这是一个基于 Spring Boot 3.3.5 的 Java 21 后端 API 工程，包名是 `com.videomanager`，默认监听 `4000` 端口。
+这是一个基于 Spring Boot 3.3.5 的 Java 25 后端 API 工程，包名是 `com.videomanager`，默认监听 `4000` 端口。
 
 主要功能模块：
 
@@ -47,7 +47,7 @@ HTTP 请求
 
 环境要求：
 
-- JDK 21+
+- JDK 25+
 - Maven 3.9+
 - MySQL，且存在 `video_manager` 数据库和相关表
 

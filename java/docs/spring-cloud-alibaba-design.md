@@ -4,7 +4,7 @@
 
 目标是将当前 Spring Boot 单体平滑迁移到 Spring Cloud Alibaba，同时保持前端 `/api/**` 契约不变。迁移采用先治理、后拆分：先统一身份认证、服务注册和配置规范，再按业务边界拆服务，避免一次性重写导致数据与接口回归。
 
-技术基线：Java 21、Spring Boot 3.2.9、Spring Cloud 2023.0.3、Spring Cloud Alibaba 2023.0.3.2、Nacos、Spring Security、JWT、MyBatis、MySQL、Redis。版本组合按 Spring Cloud Alibaba 兼容矩阵锁定，升级时必须整组验证。
+技术基线：Java 25、Spring Boot 3.2.9、Spring Cloud 2023.0.3、Spring Cloud Alibaba 2023.0.3.2、Nacos、Spring Security、JWT、MyBatis、MySQL、Redis。版本组合按 Spring Cloud Alibaba 兼容矩阵锁定，升级时必须整组验证。
 
 ## 2. 目标架构
 
@@ -16,7 +16,7 @@ api-gateway :4000  -- JWT 校验、路由、CORS、限流、审计
        |
        +-- auth-service       用户、登录、令牌签发
        +-- media-service      视频、目录、标签、图片
-       +-- reading-service    小说、电子书、aish123
+       +-- reading-service    小说、电子书、aish123、树洞
        |
        +-- Nacos              注册发现、环境配置
        +-- Redis              缓存、令牌撤销列表、限流状态
@@ -32,7 +32,7 @@ api-gateway :4000  -- JWT 校验、路由、CORS、限流、审计
 | `api-gateway` | 路由、JWT 初检、CORS、Sentinel 限流、统一错误 | 无业务表 | 4000 |
 | `auth-service` | 用户、密码校验、令牌签发/刷新、禁用用户 | `users`、`refresh_tokens` | 4010 |
 | `media-service` | videos、folders、tags、gallery | 媒体相关表 | 4020 |
-| `reading-service` | novels、ebooks、aish123 | 阅读相关表 | 4030 |
+| `reading-service` | novels、ebooks、aish123、树洞 / Aish | 阅读相关表；树洞只读原 `jandan` schema | 4030 |
 
 服务之间只通过 HTTP/OpenFeign 或事件通信，不跨库查询。文件仍由实际挂载 NAS 的服务读取；不要经 Nacos 或数据库传输大文件。
 
@@ -90,7 +90,7 @@ FLYWAY_ENABLED=true DB_HOST=127.0.0.1 DB_PASSWORD='...' mvn spring-boot:run
 
 ### 阶段 C：按领域拆分（代码拆分已完成，独立数据库待迁移）
 
-- `reading-service` 已承载小说、电子书和 aish123。
+- `reading-service` 已承载小说、电子书、aish123 和树洞 / Aish（树洞沿用原 `jandan` schema，只读）。
 - `media-service` 已承载视频、目录、标签和图库；标签与视频仍在同一事务边界。
 - 用契约测试锁定现有 API，逐路由灰度切换并提供快速回滚。
 

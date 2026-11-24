@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.videomanager.treehole.TreeholeMapper">
+
+    <!--
+      树洞数据由 treeholeSelf 的 Gin 后端写入独立 schema（默认 jandan）。
+      这里只读访问 comments / aish2 两张表。
+      注意：${schema} 由 TreeholeProperties 校验为 [A-Za-z0-9_]{1,64}，
+      ${orderBy} 由 TreeholeService 用白名单拼装。
+    -->
+
+    <sql id="commentColumns">
+        c.id AS id,
+        c.post_id AS postId,
+        c.author AS author,
+        c.author_type AS authorType,
+        c.date_gmt AS dateGmt,
+        c.user_id AS userId,
+        c.content AS content,
+        c.vote_positive AS votePositive,
+        c.vote_negative AS voteNegative,
+        c.sub_comment_count AS subCommentCount,
+        c.images AS images,
+        c.ip_location AS ipLocation,
+        c.avatar_ref AS avatarRef,
+        c.avatar_type AS avatarType,
+        c.author_membership AS authorMembership,
+        c.created_at AS createdAt,
+        c.updated_at AS updatedAt
+    </sql>
+
+    <sql id="voteFilter">
+        <if test="minVote != null">
+            <choose>
+                <when test="maxVote != null">
+                    AND c.vote_positive BETWEEN #{minVote} AND #{maxVote}
+                </when>
+                <otherwise>
+                    AND c.vote_positive &gt;= #{minVote}
+                </otherwise>
+            </choose>
+        </if>
+    </sql>
+
+    <select id="selectComments" resultType="java.util.HashMap">
+        SELECT
+        <include refid="commentColumns"/>
+        FROM `${schema}`.comments c
+        <where>
+            <include refid="voteFilter"/>
+        </where>
+        ORDER BY ${orderBy}
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countComments" resultType="long">
+        SELECT COUNT(*)
+        FROM `${schema}`.comments c
+        <where>
+            <include refid="voteFilter"/>
+        </where>
+    </select>
+
+    <select id="selectCommentsByAuthor" resultType="java.util.HashMap">
+        SELECT
+        <include refid="commentColumns"/>
+        FROM `${schema}`.comments c
+        WHERE c.author = #{author}
+        ORDER BY c.date_gmt DESC, c.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countCommentsByAuthor" resultType="long">
+        SELECT COUNT(*)
+        FROM `${schema}`.comments c
+        WHERE c.author = #{author}
+    </select>
+
+    <select id="searchComments" resultType="java.util.HashMap">
+        SELECT
+        <include refid="commentColumns"/>
+        FROM `${schema}`.comments c
+        WHERE c.content LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY c.date_gmt DESC, c.id DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countSearchComments" resultType="long">
+        SELECT COUNT(*)
+        FROM `${schema}`.comments c
+        WHERE c.content LIKE CONCAT('%', #{keyword}, '%')
+    </select>
+
+    <select id="selectAuthorStatistics" resultType="java.util.HashMap">
+        SELECT
+            c.author AS author,
+            COALESCE(SUM(c.vote_positive), 0) AS totalLikes,
+            COALESCE(SUM(c.vote_negative), 0) AS totalDislikes,
+            COALESCE(SUM(c.sub_comment_count), 0) AS commentsReceived,
+            COUNT(*) AS articlesPosted
+        FROM `${schema}`.comments c
+        GROUP BY c.author
+        HAVING totalLikes &gt; 1000 OR totalDislikes &gt; 1000 OR commentsReceived &gt; 1000
+        ORDER BY totalLikes DESC, articlesPosted DESC
+    </select>
+
+    <select id="selectAishPosts" resultType="java.util.HashMap">
+        SELECT
+            a.title AS title,
+            a.article_url AS articleUrl,
+            a.article_id AS articleId,
+            a.area AS area,
+            a.is_new_user_post AS isNewUserPost,
+            a.author AS author,
+            a.publish_time AS publishTime,
+            a.reply_count AS replyCount,
+            a.read_count AS readCount,
+            a.last_replier AS lastReplier,
+            a.last_reply_time AS lastReplyTime
+        FROM `${schema}`.aish2 a
+        ORDER BY a.last_reply_time DESC, a.article_id DESC
+    </select>
+
+</mapper>

@@ -12,12 +12,12 @@ spring:
         namespace: ${NACOS_NAMESPACE:}
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://${DB_HOST:192.168.1.20}:${DB_PORT:3306}/${DB_NAME:video_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
+    url: jdbc:mysql://${DB_HOST}:${DB_PORT:3306}/${DB_NAME:video_manager}?useUnicode=true&characterEncoding=utf8&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Shanghai
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
   data:
     redis:
-      host: ${REDIS_HOST:192.168.1.20}
+      host: ${REDIS_HOST}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
       timeout: 3s
@@ -34,3 +34,7 @@ app:
   cache-ttl-seconds: ${CACHE_TTL_SECONDS:300}
   cors-origin: ""
   gallery-dir: ${GALLERY_DIR}
+  treehole:
+    # 树洞（treeholeSelf）数据所在的 schema，与主库共用同一个 MySQL 实例。
+    # 使用其他库名时设置 TREEHOLE_SCHEMA。
+    schema: ${TREEHOLE_SCHEMA:jandan}

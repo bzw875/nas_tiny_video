@@ -2,7 +2,7 @@
 set -euo pipefail
 
 export JWT_SECRET="${JWT_SECRET:-local-video-manager-jwt-secret-change-me}"
-export DB_HOST="${DB_HOST:-192.168.1.20}"
+export DB_HOST="${DB_HOST}"
 export DB_PORT="${DB_PORT:-3306}"
 export DB_NAME="${DB_NAME:-video_manager}"
 export DB_USERNAME="${DB_USERNAME:-root}"

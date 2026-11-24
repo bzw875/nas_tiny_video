@@ -1,32 +1,32 @@
 import { apiGet } from './client';
 
-/** Matches Spring `Map` JSON keys from `Aish123ServiceImpl`. */
+/** Matches the camelCase column aliases in `Aish123Mapper.xml`. */
 export type Aish123Thread = {
   tid: number;
   fid: number;
   title: string;
   url: string | null;
-  type_name: string | null;
-  is_sticky: number;
-  is_digest: number;
-  is_locked: number;
-  has_attachment: number;
-  has_image: number;
+  typeName: string | null;
+  isSticky: number;
+  isDigest: number;
+  isLocked: number;
+  hasAttachment: number;
+  hasImage: number;
   price: number;
-  author_uid: number | null;
-  author_name: string | null;
-  author_url: string | null;
-  created_at: string | null;
-  reply_count: number;
-  view_count: number;
-  last_reply_uid: number | null;
-  last_reply_name: string | null;
-  last_reply_at: string | null;
+  authorUid: number | null;
+  authorName: string | null;
+  authorUrl: string | null;
+  createdAt: string | null;
+  replyCount: number;
+  viewCount: number;
+  lastReplyUid: number | null;
+  lastReplyName: string | null;
+  lastReplyAt: string | null;
   rating: number | null;
-  page_index: number | null;
-  raw_row_html: string | null;
-  first_seen_at: string | null;
-  updated_at: string | null;
+  pageIndex: number | null;
+  rawRowHtml: string | null;
+  firstSeenAt: string | null;
+  updatedAt: string | null;
 };
 
 export type Aish123ListResponse = {
@@ -46,11 +46,11 @@ export type ListAish123Params = {
   sortOrder?: 'asc' | 'desc';
 };
 
-/** Sentinel for threads with empty / null {@code type_name}; backend maps to SQL filter. */
+/** Sentinel for threads with empty / null {@code typeName}; backend maps to SQL filter. */
 export const AISH123_TYPE_NONE = '__NONE__';
 
 export type Aish123TypeStatRow = {
-  type_name: string | null;
+  typeName: string | null;
   count: number;
 };
 

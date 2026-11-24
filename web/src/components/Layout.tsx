@@ -30,6 +30,9 @@ export function Layout() {
           <NavLink to="/aish123" className={({ isActive }) => (isActive ? 'active' : '')}>
             aish123
           </NavLink>
+          <NavLink to="/treehole" className={({ isActive }) => (isActive ? 'active' : '')}>
+            树洞
+          </NavLink>
           <a href={`${location.protocol}//${location.host}:61208/`} target="_blank" rel="noopener noreferrer">
           glances
           </a>

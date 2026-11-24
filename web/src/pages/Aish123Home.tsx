@@ -61,8 +61,8 @@ function typeTabRank(name: string | null): number {
 
 function sortTypeBuckets(items: Aish123TypeStatRow[]): Aish123TypeStatRow[] {
   return [...items].sort((a, b) => {
-    const ra = typeTabRank(a.type_name);
-    const rb = typeTabRank(b.type_name);
+    const ra = typeTabRank(a.typeName);
+    const rb = typeTabRank(b.typeName);
     if (ra !== rb) return ra - rb;
     return b.count - a.count;
   });
@@ -74,11 +74,11 @@ function isGeoDistrict(name: string | null): boolean {
 }
 
 function filterKey(row: Aish123TypeStatRow): string {
-  return row.type_name == null || row.type_name === '' ? AISH123_TYPE_NONE : row.type_name;
+  return row.typeName == null || row.typeName === '' ? AISH123_TYPE_NONE : row.typeName;
 }
 
 function filterLabel(row: Aish123TypeStatRow): string {
-  return row.type_name == null || row.type_name === '' ? '未分类' : row.type_name;
+  return row.typeName == null || row.typeName === '' ? '未分类' : row.typeName;
 }
 
 export function Aish123Home() {
@@ -126,7 +126,7 @@ export function Aish123Home() {
     const geo: Aish123TypeStatRow[] = [];
     const other: Aish123TypeStatRow[] = [];
     for (const row of typeStats) {
-      if (isGeoDistrict(row.type_name)) geo.push(row);
+      if (isGeoDistrict(row.typeName)) geo.push(row);
       else other.push(row);
     }
     return { geoBuckets: geo, otherBuckets: other };
@@ -267,29 +267,29 @@ export function Aish123Home() {
                   {row.title}
                 </span>
               )}
-              {row.type_name ? (
+              {row.typeName ? (
                 <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                  [{row.type_name}]
+                  [{row.typeName}]
                 </span>
               ) : null}
-              {row.is_sticky ? (
+              {row.isSticky ? (
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>置顶</span>
               ) : null}
-              {row.is_digest ? (
+              {row.isDigest ? (
                 <span style={{ fontSize: '0.75rem', color: 'var(--accent)' }}>精华</span>
               ) : null}
             </div>
             <div className="text-ellipsis" style={{ marginTop: '0.35rem', fontSize: '0.9rem' }}>
-              {row.author_url && row.author_name ? (
-                <a href={row.author_url} target="_blank" rel="noopener noreferrer">
-                  {row.author_name}
+              {row.authorUrl && row.authorName ? (
+                <a href={row.authorUrl} target="_blank" rel="noopener noreferrer">
+                  {row.authorName}
                 </a>
               ) : (
-                row.author_name ?? '—'
+                row.authorName ?? '—'
               )}
               <span style={{ color: 'var(--text-muted)', margin: '0 0.5rem' }}>·</span>
               <span style={{ color: 'var(--text-muted)' }}>
-                回 {row.reply_count} / 阅 {formatCount(row.view_count)}
+                回 {row.replyCount} / 阅 {formatCount(row.viewCount)}
               </span>
             </div>
             <div
@@ -297,8 +297,8 @@ export function Aish123Home() {
               style={{ marginTop: '0.25rem', fontSize: '0.85rem', color: 'var(--text-muted)' }}
             >
               最后回复{' '}
-              {row.last_reply_name ?? '—'}
-              {row.last_reply_at ? ` · ${formatTime(row.last_reply_at)}` : ''}
+              {row.lastReplyName ?? '—'}
+              {row.lastReplyAt ? ` · ${formatTime(row.lastReplyAt)}` : ''}
             </div>
           </div>
         ))}

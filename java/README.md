@@ -10,20 +10,21 @@
 | `auth-service` | 4010 | 用户表、登录、JWT 签发、Flyway |
 | `media-service` | 4020 | 视频、目录、标签、图库 |
 | `office-service` | 4040 | 任务管理 |
-| `reading-service` | 4030 | 小说、电子书、aish123 |
+| `reading-service` | 4030 | 小说、电子书、aish123、树洞 / Aish（只读 `jandan` schema） |
 | `service-common` | - | 资源服务鉴权、异常、缓存与公共配置 |
 
 完整架构和迁移说明见 [docs/spring-cloud-alibaba-design.md](docs/spring-cloud-alibaba-design.md)。
 
 ## 本地启动
 
-环境要求：JDK 21、Maven 3.9、MySQL、Redis。
+环境要求：JDK 25、Maven 3.9、MySQL、Redis。
 
 ```bash
 cd /Users/mac/workspace/nodejs/nas_tiny_video/java
 
-export DB_HOST=192.168.1.20
+export DB_HOST=
 export DB_PASSWORD='你的数据库密码'
+export REDIS_HOST=
 export REDIS_PASSWORD='你的Redis密码'
 export JWT_SECRET='至少32字节的本地随机密钥'
 
@@ -57,6 +58,30 @@ curl -X POST http://127.0.0.1:4000/api/auth/login \
 curl http://127.0.0.1:4000/api/videos \
   -H 'Authorization: Bearer 你的accessToken'
 ```
+
+## 树洞 / Aish（从 treeholeSelf 迁移）
+
+树洞数据保留在原 treeholeSelf 的 MySQL schema 中（默认 `jandan`，表 `comments`、`aish2`），
+`reading-service` 以只读方式查询，不做数据搬迁。要求该 schema 与 `video_manager` 在同一个 MySQL 实例上：
+
+```bash
+export DB_HOST=
+export DB_PASSWORD='你的数据库密码'
+export TREEHOLE_SCHEMA=jandan   # 可选，默认 jandan
+```
+
+接口（经网关 `http://127.0.0.1:4000`，均需 Bearer Token）：
+
+| 方法 | 路径 | 说明 |
+|---|---|---|
+| GET | `/api/treehole` | 分页列表，支持 `page`、`size`、`field`、`sort`、`likeRange` |
+| GET | `/api/treehole/author/{author}` | 按作者查询，支持 `page`、`size` |
+| GET | `/api/treehole/search?q=` | 内容关键词搜索，支持 `page`、`size` |
+| GET | `/api/treehole/statistics` | 作者统计（兼容旧路径 `/static`） |
+| GET | `/api/aish/posts` | Aish 帖子列表 |
+
+前端路由：`/treehole`、`/treehole/search`、`/treehole/statistics`、`/treehole/aish`、`/treehole/author/:author`。
+字段与参数细节见 [docs/treehole.md](docs/treehole.md)。
 
 ## 前端 API 地址
 
